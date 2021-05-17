@@ -313,7 +313,13 @@ Include comments in your code. Easy-to-understand chunks of code should not have
 
 Make your comments meaningful. They should not be a simple description of what your code does. The best comments are descriptions about why you did what you did and which other approaches you tried or considered. (The code already tells us what you did.) Good comments often have a “Dear Diary” quality: “I did this. Then I tried that. I finally chose this other thing because of reasons X, Y and Z. If I work on this again, I should look into this other approach.” Because of this, the structure is often a paragraph of comments followed by several lines of code. 
 
-Each line of a comment should begin with the comment symbol (a "hash") followed by a single space: `# `. Code comments must be separated from code by one empty line on both sides. Format your code comments neatly. Ctrl-Shift-/ is the easiest way to do that. Name your R code chunks. Spelling matters. Comments should be constructed as sentences, with appropriate capitalization and punctuation. 
+Each line of a comment should begin with the comment symbol (a "hash") followed by a single space: `# `. Code comments must be separated from code by one empty line on both sides. Format your code comments neatly. Ctrl-Shift-/ is the easiest way to do that. Name your R code chunks, without using weird characters or spaces. `download_data` is a good R code chunk name. `Plot #1` is not.   
+
+
+
+
+
+Spelling matters. Comments should be constructed as sentences, with appropriate capitalization and punctuation. 
 
 ### Graphics {-}
 
@@ -629,6 +635,21 @@ x %>%
 ```
 
 &nbsp;
+
+We can use `tab_spanner()` to add spanner columns. The `vars()` argument takes in the variables that the spanner column will cover.
+
+```{r}
+x %>% 
+  gt()%>%
+   tab_header(title = md("**Enos Data Observations**"), 
+              subtitle = "Gender, Income, and End Attitude from the Trains Data") %>% 
+   tab_spanner(label = "Name of Spanner Column Here", vars(gender, income))
+```
+
+From here on, our current table will not include a spanner column. If you wish to see more examples of spanner columns, go to [Chapter 4](https://ppbds.github.io/primer/rubin-causal-model.html#a-single-value-for-tau).
+
+&nbsp;
+
 
 You can change the column names using `cols_label()`:
 

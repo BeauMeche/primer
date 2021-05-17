@@ -10,6 +10,7 @@
 # students since the code they see does not make use of them. Should ggthemes be
 # here? Do we need gifski here?
 
+library(usethis)
 library(knitr)
 library(scales)
 library(gt)

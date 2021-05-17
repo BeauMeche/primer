@@ -2,11 +2,13 @@
 
 Everyone loves visualizations. 
 
-<!-- DK: economist theme causes the subtitle (and other labels) to bleed into the title. Can we clean this up? Use a different theme? -->
+<!-- Economist theme causes the subtitle (and other labels) to bleed into the title. Can we clean this up? Use a different theme? -->
 
-<!-- DK: Would be nice if the plot featured a statistical measure of some kind (maybe a 95% confidence interval) so that we have a motivation for learning about distributions. Probably need a very different plot. Maybe something political? Election 2020? -->
+<!-- Would be nice if the plot featured a statistical measure of some kind (maybe a 95% confidence interval) so that we have a motivation for learning about distributions. Probably need a very different plot. Maybe something political? Election 2020? -->
 
-<!-- DK: Plot should be much cooler, perhaps even using big data. And an associated map. Precinct level voting changes 2012 -> 2016 -> 2020, perhaps. -->
+<!-- Plot should be much cooler, perhaps even using big data. And an associated map. Precinct level voting changes 2012 -> 2016 -> 2020, perhaps. -->
+
+<!-- Should discuss group aesthetic, especially for line plots. -->
 
 
 ```{r, message = FALSE, echo = FALSE}
@@ -584,67 +586,38 @@ The values on the y-axis are scaled so that the total area under the curve equal
 
 ## The Tidyverse
 
-Going forward, most `ggplot()` code will omit the `data = ` and `mapping = ` explicit naming of arguments while relying on the default ordering of those arguments. Most of the time, we include argument names and, as a rule, you should to. But we create so many plots in *The Primer* that these omissions are unlikely to cause problems.
+Going forward, most `ggplot()` code will omit the `data = ` and `mapping = ` explicit naming of arguments while relying on the default ordering. Most of the time, we include argument names and, as a rule, you should to. But we create so many plots in *The Primer* that these omissions are unlikely to cause problems.
 
 
 ### Data wrangling 
 
-We can't use all the beautiful plots that we learned in the previous chapter until we have "wrangled" the data into a convenient shape. In this chapter, we'll introduce a series of functions from the **tidyverse** collection of packages which help with wrangling, and everything else we need to do to work with data. Such functions include:
+We can't use all the beautiful plots that we learned in the previous chapter until we have "wrangled" the data into a convenient shape. Key wrangling functions include:
 
-* `filter()` to pick out the *rows* we want to keep from a tibble.
+* `filter()`: to pick out the *rows* we want to keep from a tibble.
 
-* `select()` to pick out the *columns* we want to keep from a tibble.
+* `select()`: to pick out the *columns* we want to keep from a tibble.
 
-* `arrange()` the rows in a tibble, in either ascending or descending order. 
+* `arrange()`: to sort the rows in a tibble, in either ascending or descending order. 
 
-* `mutate()` to create new columns.
+* `mutate()`: to create new columns.
 
-* `group_by()` the rows of a tibble. This function assigns different rows to be part of the same *group*. This allows statistics to be calculated for each group *separately*. You will usually use `group_by` with `summarize()`.
+* `group_by()`: to assign each row in a tibble to a "group." This allows statistics to be calculated for each group *separately*. You will usually use `group_by()` with `summarize()`.
 
-* `summarize()` the data. It creates a new data frame comprised of summary statistics for one (or more) rows for each grouped variable, or for the tibble as a whole if it is ungrouped. 
+* `summarize()`: to create a new tibble comprised of summary statistics for one (or more) rows for each grouped variable, or for the tibble as a whole if it is ungrouped. 
 
 ### The pipe operator: `%>%`
 
-Before we start data wrangling, let's first introduce a nifty tool that gets loaded with the **dplyr** package included in the tidyverse: the pipe operator `%>%`. The pipe operator allows us to combine multiple operations in R into a single sequential *chain* of actions.
+The pipe operator (`%>%`) allows us to combine multiple operations in R into a single sequential *chain* of actions. Much like how the `+` sign has to come at the end of the line when constructing plots --- because we are building the plot layer-by-layer --- the pipe operator `%>%` has to come at the end of the line because we are building a data wrangling pipeline step-by-step.
 
-Recall the (modified) code for one of our graphics above.
-
-```{r}
-ggplot(trains, 
-       aes(x = att_start, 
-           y = att_end)) + 
-  geom_point() +
-  geom_smooth(method = "lm", 
-              formula = y ~ x) +
-  labs(title = "Immigration Attitudes Among Boston Commuters",
-       subtitle = "Attitudes did not change much after the experiment",
-       x = "Attitude Before Experiment",
-       y = "Attitude After Experiment",
-       caption = "Data source: Enos (2014)")
-
-```
-
-Much like how the `+` sign has to come at the end of lines when constructing plots --- because we are building the plot layer-by-layer --- the pipe operator `%>%` has to come at the end of lines because we are building a data wrangling pipeline step-by-step.
-
-
-The code below filters the `trains` dataset to only row for men.
-
-```{r}
-trains %>% 
-  filter(gender == "Male")
-```
-
-A single *chain* of data wrangling operations is formed here by combining verb-named functions into a single sequence using the pipe operator `%>%`. 
 
 ### `filter()` rows
 
-```{r, echo = FALSE, fig.cap = "Diagram of filter() rows operation."}
+```{r, echo = FALSE, fig.cap = "filter() reduces the rows in a tibble."}
 knitr::include_graphics("01-visualization/images/filter.png")
 ```
 
-The `filter()` function here works much like the "Filter" option in Microsoft Excel; it allows you to specify criteria about the values of a variable in your dataset and then filters out only the rows that match that criteria.
+The `filter()` function works much like the "Filter" option in Microsoft Excel. It allows you to specify criteria about the values of a variable in your dataset and then selects only the rows that match that criteria.
 
-Let's revisit the code from the previous section.
 
 ```{r}
 trains %>% 
@@ -658,24 +631,22 @@ trains_men <- trains %>%
   filter(gender == "Male")
 ```
 
-Let's break down the code here: 
+Let's break down the code. We assigned our new data to an object named `trains_men` via `trains_men <-`. Because we assigned this modified data frame to `trains_men`, it is a separate entity from the initial `trains` data frame. If, however, we had written the code as `trains <- trains` we would have overwritten the already-existing tibble. 
 
-Here we assigned our new data to an object named `trains_men` via `trains_men <-`. Because we assigned this modified data frame to `trains_men`, it is a separate entity from the initial `trains` data frame. If, however, we had written the code as `trains <- trains` we would have overwritten the already-existing tibble. 
-
-We take the `trains` tibble and  *then* `filter()` so that only those observations where the `gender` equals "Male" are included. We test for equality using the double equal sign `==` and not a single equal sign `=`. In other words, `filter(gender = "Male")` will produce an error. This is a convention across many programming languages. If you are new to coding, you'll probably forget to use the double equal sign `==` a few times before you get the hang of it.
+We start with the `trains` tibble and  *then* `filter()` so that only those observations where the `gender` equals "Male" are included. We test for equality using the double equal sign `==` and not a single equal sign `=`. In other words, `filter(gender = "Male")` will produce an error. This is a convention across many programming languages. 
 
 You can use other operators beyond just the `==` operator.
 
-- `>` corresponds to "greater than"
-- `<` corresponds to "less than"
-- `>=` corresponds to "greater than or equal to"
-- `<=` corresponds to "less than or equal to"
-- `!=` corresponds to "not equal to." The `!` is used in many programming languages to indicate "not."
+- `>` for  "greater than"
+- `<` for  "less than"
+- `>=` for  "greater than or equal to"
+- `<=` for  "less than or equal to"
+- `!=` for  "not equal to." The `!` indicates "not."
 
 Furthermore, you can combine multiple criteria using operators that make comparisons:
 
-- `|` corresponds to "or"
-- `&` corresponds to "and"
+- `|` for  "or"
+- `&` for  "and"
 
 For example, let's `filter()` the `trains` tibble to include only women who are Republicans and younger than 40.
 
@@ -686,17 +657,24 @@ trains %>%
            age < 40)
 ```
 
-`filter()` should often be among the first verbs you consider applying to your data. This cleans your dataset to only those rows you care about.
+Instead of create a single criteria with many parts, liked with an `&`, you can just separate the parts with a comma. The resulting tibble is the same.
+
+```{r}
+trains %>% 
+  filter(gender == "Female",
+         party == "Republican",
+         age < 40)
+```
 
 <!-- DK: More examples? -->
 
 ### `select` variables
 
-```{r, echo = FALSE, fig.cap = "Diagram of select() columns."}
+```{r, echo = FALSE, fig.cap = "select() reduces the number of columns in a tibble."}
 knitr::include_graphics("01-visualization/images/select.png")
 ```
 
-Using the `filter()` function we were able to pick out specific *rows* from the dataset. The `select()` function allows us to pick specific *columns* (variables) instead.
+Using the `filter()` function we were able to pick out specific *rows* (observations) from the tibble. The `select()` function allows us to pick specific *columns* (variables) instead.
 
 Use `glimpse()` to see the names of the variables in `trains`:
 
@@ -711,14 +689,14 @@ trains %>%
   select(gender, treatment)
 ```
 
-Let's say instead you want to drop, or de-select, certain variables. Do that with the minus (`-`) sign:
+You can drop, or "de-select," certain variables by using the minus (`-`) sign:
 
 ```{r}
 trains %>% 
   select(-gender, -liberal, -party, -age)
 ```
 
-Another way of selecting columns/variables is by specifying a range of columns using the `:` operator. 
+You can specify a range of columns by using the `:` operator. 
 
 ```{r}
 trains %>% 
@@ -726,7 +704,7 @@ trains %>%
 ```
 
 This will `select()` all columns between the two specified variables. 
-The `select()` function can also be used to rearrange columns when used with the `everything()` helper function. We can out the `treatment` and `gender` variables first with:  
+The `select()` function can also be used to rearrange columns when used with the `everything()` helper function. We can put the `treatment` and `gender` variables first with:  
 
 ```{r}
 trains %>% 
@@ -762,18 +740,11 @@ trains %>%
 ```
 
 
-### `arrange()` rows
+### `arrange()`
 
-One of the most commonly performed data wrangling tasks is to sort a data frame's rows in the alphanumeric order of one of the variables. Unlike `filter()` or `select()`, `arrange()` does not remove any rows or columns from the data frame. Instead,  `arrange()` allows us to sort/reorder a tibble's rows according to the values of a specific variable.
+<!-- DK: Where is the graphic? -->
 
-Let's start by selecting some relevant variables:
-
-```{r}
-trains %>% 
-  select(treatment, gender, age)
-```
-
-Sort by `age`
+`arrange()` allows us to sort/reorder a tibble's rows according to the values of a specific variable. Unlike `filter()` or `select()`, `arrange()` does not remove any rows or columns from the tibble. Example:
 
 ```{r}
 trains %>% 
@@ -781,7 +752,7 @@ trains %>%
   arrange(age)
 ```
 
-Notice how the `age` column is sorted from the smallest values to the largest. This is because `arrange()` always returns rows sorted in ascending order by default. To switch the ordering to be in descending order instead, we use the `desc()` function like so:
+`arrange()` always returns rows sorted in ascending order by default. To switch the ordering to descending order instead, use the `desc()` function:
 
 ```{r}
 trains %>% 
@@ -789,19 +760,18 @@ trains %>%
   arrange(desc(age))
 ```
 
-This is the first of many "pipes" which we will create in *The Primer*. First, we have the `trains` tibble. Second, we pipe that to the `select()` function. Third, we pipe the results of `select()` to the `arrange()` function.
+This is the first of many "pipes" which we will create in *The Primer*. First, we have the `trains` tibble. Second, we pipe that to the `select()` function. Third, we pipe the results of `select()` to the `arrange()` function. *Each step in the pipe starts with a tibble and then, once it is done, produces a tibble. It is tibbles all the way down!*
+
+<!-- DK: Need a graphic of turtle tibbles stacked on each other. -->
 
 
 ### `mutate()` 
 
-```{r, echo = FALSE, fig.cap = "Diagram of mutate() columns."}
+```{r, echo = FALSE, fig.cap = "`mutate() adds a column to a tibble."}
 knitr::include_graphics("01-visualization/images/mutate.png")
 ```
 
-Another common transformation of data is to create new variables based on existing ones. In other words, we want to make a new column using already existing columns. The `mutate()` function from the **dplyr** package takes existing variables and mutates them to create new ones. 
-
-
-Recall that the `income` variable in the `trains` tibble is in dollars. Let's use `mutate()` to create a new variable where income is in thousands of dollars. (We use `select()` at the start of the pipe so that it is easier to see the new and old variables at the same time.)
+`mutate()` takes existing columns and creates a new column. Recall that the `income` variable in the `trains` tibble is in dollars. Let's use `mutate()` to create a new variable which is income in thousands of dollars. (We use `select()` at the start of the pipe so that it is easier to see the new and old variables at the same time.)
 
 ```{r}
 trains %>% 
@@ -812,19 +782,22 @@ trains %>%
 
 Notice that we have a newly created column at the right-hand side of our tibble named `income_in_thousands`. 
 
-When creating new variables we can also *overwrite* the original data frames like `trains` like so:
+When creating new variables we can also *overwrite* the original tibble:
 
 ```{r}
 trains <- trains %>% 
   mutate(income_in_thousands = (income) / 1000)
 ```
 
-Why overwrite a data frame `trains` instead of assigning the result to a new data frame like `trains_new`? As a rough rule of thumb, as long as you are not losing original information that you might need later, it is acceptable practice to overwrite existing data frames with updated ones, as we did here. On the other hand, why did we not overwrite the variable `income`, but instead created a new variable called `income_in_thousands`?  Because if we did this, we would have erased the original information contained in `income` and would not be able to use them in the future. 
+<!-- DK: Awk -->
+
+Whenever we create a new tibble, or a new variable within a tibble, we have a choice: Should we overwrite the existing tibble/variable or create a new one? There is no right answer. 
+
+For example, instead of overwriting `trains` in the code above, we could have created a new tibble `trains_new`. Similarly, instead of creating a new variable, `income_in_thousands`, we could have overwritten the current value of `income`. Use your best judgment and be careful. 
 
 
 #### `ifelse()`
 
-<!-- Discuss case_when()? -->
 
 <!-- DK: Edit these lines from R4DS. Are there other functions which we should mention here? Do something sensible with group_by. To get `_` to work in caption title. Found at https://github.com/rstudio/bookdown/issues/209  -->
 
@@ -853,17 +826,17 @@ knitr::include_app("https://www.youtube.com/embed/p8Py9C8iq2s")
 ```
 
 
-The next common task when working with data frames is to compute *summary statistics*. Summary statistics are single numerical values that summarize a large number of values. Commonly known examples of summary statistics include the *mean* (also called the average) and the *median* (the middle value). Other examples of summary statistics that might not immediately come to mind include the *sum*, the *minimum*, the *maximum*, and the *standard deviation*.
+We often need to calculate *summary statistics*, things like the *mean* (also called the average) and the *median* (the middle value). Other examples of summary statistics include the *sum*, the *minimum*, the *maximum*, and the *standard deviation*.
 
-The function `summarize()` allows us to calculate these statistics on individual columns of the dataset. Example:
+The function `summarize()` allows us to calculate these statistics on individual columns from a tibble. Example:
 
 ```{r}
 trains %>% 
-  summarize(mean = mean(age), 
-            std_dev = sd(age))
+  summarize(mn_age = mean(age), 
+            sd_age = sd(age))
 ```
 
-The `mean()` and `sd()` summary functions go inside the `summarize()`  function. (You can also use the British English spelling:  `summarise()`.) The `summarize()` function takes in a data frame and returns a data frame with only one row corresponding to the summary statistics. 
+The `mean()` and `sd()` summary functions go inside the `summarize()`  function. The `summarize()` function takes in a tibble and returns a tibbles with only one row corresponding to the summary statistics. Remember: Tibbles go in and tibble come out.
 
 
 ### Statistics for distributions
@@ -872,11 +845,11 @@ A variable in a tibble is a column, a vector of values. We sometimes refer to th
 
 *There are two distinct concepts: a distribution and a set values drawn from that distribution.*  But, in everyday use, we use "distribution" to both. When given a distribution (meaning a vector of numbers), we often use `geom_histogram()` or `geom_density()` to graph it. But, sometimes, we don't want to look at the whole thing. We just want some summary measures which report the key aspects of the distribution. The two most important attributes of a distribution are its *center* and its *variation* around that center.
 
-We use `summarize()` to calculate statistics for a variable, a column, a vector of values or a distribution. Note the language sloppiness. For the purposes of this book, "variable," "column," "vector," and "distribution" all mean the same thing. Popular statistical functions include: `mean()`, `median()`, `min()`, `max()`, `n()` and `sum()`. Functions which may be new to you include three measures of the "spread" of a distribution: `sd()` (the standard deviation), `mad()` (the scaled median absolute deviation) and `quantile()` (use to calculate an *interval* which includes a specified proportion of the values). 
+We use `summarize()` to calculate statistics for a variable, a column, a vector of values or a distribution. Note the language sloppiness. For the purposes of this book, "variable," "column," "vector," and "distribution" all mean the same thing. Popular statistical functions include: `mean()`, `median()`, `min()`, `max()`, `n()` and `sum()`. Functions which may be new to you include three measures of the "spread" of a distribution: `sd()` (the standard deviation), `mad()` (the scaled median absolute deviation) and `quantile()`, which is used to calculate an *interval* which includes a specified proportion of the values. 
 
 **`mean()`**
 
-The mean, or average, is the most commonly reported measure of the center of a distribution.  The mean is the sum of all of the data elements divided by how many elements there are. If we have $N$ data points, the mean is given by: 
+The mean, or average, is the most commonly reported measure of the center of a distribution.  The mean is the sum of all of the data elements divided by the number of elements. If we have $N$ data points, the mean is given by: 
 
 $$\bar{x} = \frac{x_1 + x_2 + \cdots + x_N}{N}$$
 
@@ -1016,14 +989,52 @@ If you have a tibble which has been grouped, you can remove the grouping variabl
 
 <!-- 2) Purpose of Advanced plotting is to show the tools for making the plots that appear in socviz.co, chapters 3 and 4.  -->
 
-<!-- BG: teach scalexcont, scaleycont, afterstat, late tricks in the book, do not worrry about building gapminder -->
+<!-- BG: teach scalexcont, scaleycont, afterstat, late tricks in the book, do not worry about building gapminder -->
+
+Good visualizations teach. When you construct a plot, decide what message you want to convey. Here are some functions which may be helpful. 
+
+### Plot objects
+
+Plots are R objects, just like tibbles. We can create them, print them and save them. Up until now, we have just "spat" them out in an R code chunk. Nothing wrong with that! Indeed, this is the most common approach to plotting in R. Sometimes, however, it is handy to work with a plot object. Consider:
+
+```{r}
+train_plot <- ggplot(data = trains, 
+       mapping = aes(x = age, 
+                     y = income)) + 
+  geom_point()
+```
+
+This is the same code as our first example with `geom_point()`. `train_plot` is an R object. This code does not print anything out. In order to make this plot appear, we need to print it out explicitly:
+
+```{r}
+train_plot
+```
+
+Recall that typing the name of an object is the same thing as using `print()`. Now that we have this object, we can display it whenever we want. 
+
+But, sometimes, we want a permanent copy of the plot, saved to our computer. That is the purpose of `ggsave()`:
+
+```{r, eval = FALSE}
+ggsave(filename = "enos_trains.jpg", 
+       plot = train_plot)
+```
+
+`ggsave()` uses the suffix of the provided `filename` to determine the type of image to save. Because we use "enos_trains.jpg", the file is saved in JPEG format. If we had used "enos_trains.png", the file would have been saved as a PNG. We can display a saved file by using `knitr::include_graphics()`. For example:
 
 
-In the previous section we have seen the three components that every plot must include: data, data mappings, and a geom. You may have found that the graphics from before look a bit boring. Luckily, the Grammar of Graphics allows us to add more layers on our own in order to customize our plots. We will go over some of the additional layers here, but the [Data Visualization with ggplot2 Cheat Sheet](https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf) is a great resource to refer to as your ggplot visualizations get more complicated.
+````markdown
+`r ''````{r}
+knitr::include_graphics("enos_trains.jpg")
+```
+````
+
+This code displays the image in an Rmd, assuming that the file "enos_trains.jpg" is located in the current working directory. A common scenario is that we create an image and store it in a directory named `figures/` and then use that figure in more than one Rmd. 
+
+
 
 ### Faceting
 
-Let's start by introducing a new concept called *faceting*.  Faceting is used when we'd like to split a particular visualization by the values of another variable. This will create multiple copies of the same type of plot with matching x and y axes, but whose content will differ. 
+Faceting splits a visualization into parts, one for each value of another variable.. This will create multiple copies of the same type of plot with matching x and y axes, but whose contents will differ. 
 
 
 Before we proceed, let's create a subset of the tibble `gapminder`, from the **gapminder**, package to use. (You may need to install the **gapminder** package for this code to work.)
@@ -1045,7 +1056,7 @@ ggplot(data = gapminder_filt,
   geom_point()
 ```
 
-As you can see, it is quite difficult to compare the continents despite the colors. It would be much easier if we could "split" this scatterplot by the 5 continents in the dataset. In other words, we would create plots of `gdpPercap` and `lifeExp` for each `continent` separately. We do this by using the function `facet_wrap()` with the argument `~ continent`.
+It is difficult to compare the continents despite the colors. It would be much easier if we could "split" this scatterplot by the 4 continents. In other words, we would create plots of `gdpPercap` and `lifeExp` for each `continent` separately. We do this by using the function `facet_wrap()` with the argument `~ continent`.
 
 ```{r}
 ggplot(data = gapminder_filt, 
@@ -1056,10 +1067,7 @@ ggplot(data = gapminder_filt,
   facet_wrap(~ continent)
 ```
 
-This is way better! However, R chooses by default 2 plots per row, so that Asia and Europe are below the other two continents. We can specify the number of rows and columns in the grid by using the `nrow` argument inside of `facet_wrap()`. Let's get all continents in a row by setting `nrow` to 1.
-
-
-Let's now add a trend line `geom_smooth()` to our faceted plot.
+This is much better! We can specify the number of rows and columns in the grid by using the `nrow` argument inside of `facet_wrap()`. Let's get all continents in a row by setting `nrow` to 1. Let's also add a trend line `geom_smooth()` to our faceted plot.
 
 ```{r}
 ggplot(data = gapminder_filt, 
@@ -1073,7 +1081,7 @@ ggplot(data = gapminder_filt,
               se = FALSE)
 ```
 
-As expected, we can see a positive correlation between economic development and life expectancy on all continents. Now it is also clearer that Asia is on average at about the same level as the Americas, but there are more countries in Asia that are at both extremes.
+As expected, we can see a positive correlation between economic development and life expectancy on all continents. 
 
 
 ### Stats
@@ -1087,23 +1095,23 @@ ggplot(data = gapminder,
                  color = "white")
 ```
 
-Recall the y-aesthetic of a histogram, the count of the observations in each bin, gets computed for you automatically. We can use the  `after_stat()` argument within `geom_histogram()` to generate percent values as our y-aesthetic. 
+Recall that the y-aesthetic of a histogram --- the count of the observations in each bin --- gets computed automatically. We can use the  `after_stat()` argument within `geom_histogram()` to generate percent values as our y-aesthetic. 
 
 
-```{r message = FALSE}
+```{r}
 ggplot(data = gapminder, 
-       mapping = aes(x = lifeExp))+ 
-  geom_histogram(aes(y = after_stat(count/sum(count)), 
-                   bins = 20))
+       mapping = aes(x = lifeExp)) + 
+  geom_histogram(aes(y = after_stat(count/sum(count))), 
+                   bins = 20) +
+  labs(y = "Percentage")
 ```
 
  
 ### Coordinate Systems
 
-Next, we can specify the type of coordinate system. In most cases we will use Cartesian coordinate systems. A coordinate system that is used most often is `coord_flip()`. This is actually just a Cartesian coordinate system, but as the name suggests, it simply swaps the axes.
+<!-- DK: Awk? Delete? Need more tricks, but more pithily explained and demonstrated. -->
 
-
-Consider the faceted scatterplot we previously created. 
+We can switch the axes on a plot with `coord_flip()`. Consider the faceted scatterplot we previously created. 
 
 ```{r}
 ggplot(data = gapminder_filt, 
@@ -1117,7 +1125,7 @@ ggplot(data = gapminder_filt,
               se = FALSE)
 ```
 
-Let's now add the layer `coord_flip()` to flip the axises.
+Adding the layer `coord_flip()` flips the axes.
 
 ```{r}
 ggplot(data = gapminder_filt, 
@@ -1132,25 +1140,26 @@ ggplot(data = gapminder_filt,
   coord_flip()
 ```
 
-As can be seen, `lifeExp` is now on the x-axis and `gdpPercap` on the y-axis. Compared to the previous plot it is now easier to observe the distribution of life expectancy in the respective continents. For example, we can see that many countries in Africa are at about 55 years, in the Americas and Asia at 75 years, and in Europe at 80 years. However, we think it makes more sense to consider `lifeExp` as the dependent variable, so don’t use `coord_flip()` in the subsequent plots.
+`lifeExp` is now on the x-axis and `gdpPercap` on the y-axis. Compared to the previous plot it is now easier to observe the distribution of life expectancy in the respective continents. For example, we can see that many countries in Africa are at about 55 years, in the Americas and Asia at 75 years, and in Europe at 80 years. However, we think it makes more sense to consider `lifeExp` as the dependent variable, so we won't use `coord_flip()` in subsequent plots.
 
 
 ### Axis Limits and Scales
 
-We can also manipulate the limits of the axes by using `xlim()` and `ylim()`. For example, assume that we are only interested in countries with a GDP per capita from 0 to 30000. We can tell R as follows that we only want to see this range. Note that, because `data` is the first argument and `mapping` is the second to `ggplot()`, we don't actually have to name the arguments. We can just provide them, as long as they are in the correct order.
+We can also manipulate the limits of the axes by using `xlim()` and `ylim()` within a call to `coord_cartesian()`. For example, assume that we are only interested in countries with a GDP per capita from 0 to 30,000. Recall that, because `data` is the first argument and `mapping` is the second to `ggplot()`, we don't actually have to name the arguments. We can just provide them, as long as they are in the correct order.
 
-```{r warning = FALSE}
+
+```{r}
 ggplot(gapminder_filt, 
        aes(x = gdpPercap, y = lifeExp, color = continent)) +
   geom_point() +
   facet_wrap(~ continent) +
-  xlim(0, 30000)
+  coord_cartesian(xlim = c(0, 30000))
 ```
 
-We can see that the GDP per capita on the x-axis is now only shown from 0 to 30000. 
+We can see that the GDP per capita on the x-axis is now only shown from 0 to 30,000. 
 
 
-We can also change the scaling of the axes. For example, it might be useful to display the axes with `scale_x_log10()` or `scale_y_log10()` on a logarithmic scale. Let's try this out on GDP per capita. Also, note that we can (lazily!) not provide the explicit `x` and `y` argument names to `aes()` as long as we provide the values in the right order: `x` comes before `y`. 
+We can also change the scaling of the axes. For example, it might be useful to display the axes on a logarithmic scale by using `scale_x_log10()` or `scale_y_log10()`. Also, note that we can (lazily!) not provide the explicit `x` and `y` argument names to `aes()` as long as we provide the values in the right order: `x` comes before `y`. 
 
 ```{r}
 ggplot(gapminder_filt, 
@@ -1163,10 +1172,13 @@ ggplot(gapminder_filt,
 
 <!-- BG: Need scale_x_cont and scale_y_cont here -->
 
+
 ### Text
 
+<!-- DK: Should learn about ggrepel -->
+
 Recall we use `labs()` to add labels and titles to our plots. 
-We can also change labels inside the plots. Wouldn't it be great if we knew which country each point refers to? We can do this with the help of `geom_text()`:
+We can also change labels inside the plots using `geom_text()`.
 
 ```{r}
 ggplot(gapminder_filt, 
@@ -1180,22 +1192,24 @@ ggplot(gapminder_filt,
        x = "GDP per Capita, USD",
        y = "Life Expectancy, Years",
        caption = "Source: Gapminder") +
-  geom_text(aes(label = country), size = 2, 
-            color = "black", check_overlap = TRUE)
+  geom_text(aes(label = country), 
+            size = 2, 
+            color = "black", 
+            check_overlap = TRUE)
 ```
 
-Let's breakdown the code within `geom_text()`. We included a new aesthetic called *label*. This defines the character variable which will be used as the basis for the labels. We set `label` to country so each point corresponds to the country is represents. We set the text font by setting `size` to 2, and we set the text color using `color`. Finally, we included the argument `check_overlap = TRUE` to make sure the names of the countries were legible. 
+Let's breakdown the code within `geom_text()`. We included a new aesthetic called *label*. This defines the character variable which will be used as the basis for the labels. We set `label` to country so each point corresponds to the country it represents. We set the text font by setting `size` to 2, and we set the text color by using `color`. Finally, we included the argument `check_overlap = TRUE` to make sure the names of the countries were legible. 
 
 
 ### Themes
 
-**Themes** can be used to change the overall appearance of a plot without much effort. We add themes as layers to our plots. You can find an overview of the different themes in ggplot [here](https://ggplot2.tidyverse.org/reference/ggtheme.html).
+**Themes** can be used to change the overall appearance of a plot without much effort. We add themes as layers to our plots. You can find an overview of the different themes in **ggplot** [here](https://ggplot2.tidyverse.org/reference/ggtheme.html).
 
 
-Let's consider the following faceted scatterplot.
+Consider the following faceted scatterplot.
+
 
 ```{r}
-
 gapminder %>%
   filter(continent != "Oceania") %>%
   filter(year == max(year)) %>% 
@@ -1211,6 +1225,8 @@ gapminder %>%
          y = "Life Expectancy") +
     scale_x_log10(breaks = c(500, 5000, 50000)) 
 ```
+
+Note the use of the `breaks` argument to `scale_x_log10()`. This specifies the location of labels on the x-axis. We can also use the `labels` argument if we want to change their appearence. These tricks work in the entire family of `scale_*` functions.
 
 Let's now add a theme to our faceted scatterplot. We will use the theme `theme_economist()`, from the **ggthemes** package, to make our plot look like the plots in the *The Economist*. 
 
@@ -1264,11 +1280,19 @@ Great. Now our graph is easier to visualize. In addition, note that the `theme()
 
 ## Summary
 
+*Tibbles are rectangular stores of data. They are a specific type of data frame, so we will use both terms interchangeably.*
+
 *You need to practice every day.* 
 
 *Do not use pie charts.*
 
 *Shield my eyes from your ugly messages and warning.*
+
+*Each step in the pipe starts with a tibble and then, once it is done, produces a tibble. It is tibbles all the way down!*
+
+*When your R code is behaving in a weird way, especially when it is "losing" rows, the problem is often solved by using `ungroup()` in the pipeline.*
+
+*The two most important attributes of a distribution are its center and its variation around that center.*
 
 In this chapter, we first looked at basic coding terminology and concepts that we deal with when programming with R. We then learned about the three basic components that make up each plot: data, mapping, and one or more geoms. The **ggplot2** package offers a wide range of geoms that we can use to create different types of plots. Next, we examined the "super package" **tidyverse**, which includes helpful tools for visualization. It also offers features for importing and manipulating data, which is the main topic of Chapter @\ref(wrangling). Lastly, we explored advanced plotting features such as axis scaling, faceting, and themes. 
 

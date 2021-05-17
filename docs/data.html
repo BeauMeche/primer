@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Chapter 3 Data | Preceptor’s Primer for Bayesian Data Science</title>
+<meta name="author" content="David Kane">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.2"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/header-attrs-2.5.3/header-attrs.js"></script><script src="libs/jquery-3.5.1/jquery-3.5.1.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.5.3/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.5.3/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.2.3.9000/tabs.js"></script><script src="libs/bs3compat-0.2.3.9000/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script src="libs/htmlwidgets-1.5.2/htmlwidgets.js"></script><script src="libs/plotly-binding-4.9.2.1/plotly.js"></script><script src="libs/typedarray-0.1/typedarray.min.js"></script><link href="libs/crosstalk-1.1.0.1/css/crosstalk.css" rel="stylesheet">
+<script src="libs/crosstalk-1.1.0.1/js/crosstalk.min.js"></script><link href="libs/plotly-htmlwidgets-css-1.52.2/plotly-htmlwidgets.css" rel="stylesheet">
+<script src="libs/plotly-main-1.52.2/plotly-latest.min.js"></script><script src="libs/rglWebGL-binding-0.103.5/rglWebGL.js"></script><link href="libs/rglwidgetClass-0.103.5/rgl.css" rel="stylesheet">
+<script src="libs/rglwidgetClass-0.103.5/rglClass.min.js"></script><script src="libs/CanvasMatrix4-0.103.5/CanvasMatrix.min.js"></script><script src="https://cdn.jsdelivr.net/autocomplete.js/0/autocomplete.jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/mark.js@8.11.1/dist/mark.min.js"></script><!-- CSS -->
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">Preceptor’s Primer for Bayesian Data Science</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">Welcome</a></li>
+<li><a class="" href="preamble.html">Preamble</a></li>
+<li><a class="" href="shopping-week.html">Shopping Week</a></li>
+<li><a class="" href="visualization.html"><span class="header-section-number">1</span> Visualization</a></li>
+<li><a class="" href="wrangling.html"><span class="header-section-number">2</span> Wrangling</a></li>
+<li><a class="active" href="data.html"><span class="header-section-number">3</span> Data</a></li>
+<li><a class="" href="rubin-causal-model.html"><span class="header-section-number">4</span> Rubin Causal Model</a></li>
+<li><a class="" href="probability.html"><span class="header-section-number">5</span> Probability</a></li>
+<li><a class="" href="one-parameter.html"><span class="header-section-number">6</span> One Parameter</a></li>
+<li><a class="" href="two-parameters.html"><span class="header-section-number">7</span> Two Parameters</a></li>
+<li><a class="" href="three-parameters.html"><span class="header-section-number">8</span> Three Parameters</a></li>
+<li><a class="" href="four-parameters.html"><span class="header-section-number">9</span> Four Parameters</a></li>
+<li><a class="" href="five-parameters.html"><span class="header-section-number">10</span> Five Parameters</a></li>
+<li><a class="" href="n-parameters.html"><span class="header-section-number">11</span> N Parameters</a></li>
+<li><a class="" href="tools.html">Tools</a></li>
+<li><a class="" href="functions.html">Functions</a></li>
+<li><a class="" href="shiny.html">Shiny</a></li>
+<li><a class="" href="maps.html">Maps</a></li>
+<li><a class="" href="ipums.html">IPUMS</a></li>
+<li><a class="" href="animation.html">Animation</a></li>
+<li><a class="" href="references.html">References</a></li>
+</ul>
+
+        <div class="book-extra">
+          <p><a id="book-repo" href="https://github.com/PPBDS/primer">View book source <i class="fab fa-github"></i></a></p>
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="data" class="section level1" number="3">
+<h1>
+<span class="header-section-number">3</span> Data<a class="anchor" aria-label="anchor" href="#data"><i class="fas fa-link"></i></a>
+</h1>
+<p><em>This chapter is a draft.</em></p>
+<div id="introduction" class="section level2" number="3.1">
+<h2>
+<span class="header-section-number">3.1</span> Introduction<a class="anchor" aria-label="anchor" href="#introduction"><i class="fas fa-link"></i></a>
+</h2>
+<p>Start by loading the packages which we will need in this chapter.</p>
+<div class="sourceCode" id="cb399"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">primer.data</span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://lubridate.tidyverse.org">lubridate</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/sfirke/janitor">janitor</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://docs.ropensci.org/skimr">skimr</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://github.com/hadley/nycflights13">nycflights13</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jennybc/gapminder">gapminder</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rudeboybert/fivethirtyeight">fivethirtyeight</a></span><span class="op">)</span></code></pre></div>
+</div>
+<div id="absolute-and-relative-file-paths" class="section level2" number="3.2">
+<h2>
+<span class="header-section-number">3.2</span> Absolute and relative file paths<a class="anchor" aria-label="anchor" href="#absolute-and-relative-file-paths"><i class="fas fa-link"></i></a>
+</h2>
+<p>When you load a data set into R, you first need to tell R where those files live. The file could live on your computer (local) or somewhere on the internet (remote). In this section, we will discuss the case where the file lives on your computer.</p>
+<p>The place where the file lives on your computer is called the “path.” You can think of the path as directions to the file. There are two kinds of paths: relative paths and absolute* paths. A <em>relative</em> path is where the file is with respect to where you currently are on the computer. On the other hand, an <em>absolute</em> path is where the file is in respect to the base (or root) folder of the computer’s filesystem.</p>
+<p>Consider the a csv file called happiness_report.csv.</p>
+<p><strong>Reading <code>happiness_report.csv</code> using a relative path:</strong></p>
+<pre><code>happiness_data &lt;- read_csv("data/happiness_report.csv")</code></pre>
+<p><strong>Reading <code>happiness_report.csv</code> using an absolute path:</strong></p>
+<pre><code>happiness_data &lt;- read_csv("/home/preceptor/gov-1005/worksheet_02/data/happiness_report.csv")</code></pre>
+<p>So which one should you use? Generally speaking, to ensure your code can be run on a different computer, you should use relative paths. An added bonus is that it’s also less typing! This is because the absolute path of a file (the names of folders between the computer’s root <code><a href="https://rdrr.io/r/base/Arithmetic.html">/</a></code> and the file) isn’t usually the same across different computers. For example, suppose Fatima and Jayden are working on a project together on the <code>happiness_report.csv</code> data. Fatima’s file is stored at</p>
+<p><code>/home/Fatima/project/data/happiness_report.csv</code>,</p>
+<p>while Jayden’s is stored at</p>
+<p><code>/home/Jayden/project/data/happiness_report.csv</code>.</p>
+<p>Even though Fatima and Jayden stored their files in the same place on their computers (in their home folders), the absolute paths are different due to their different usernames. If Jayden has code that loads the <code>happiness_report.csv</code> data using an absolute path, the code won’t work on Fatima’s computer. But the relative path from inside the <code>project</code> folder (<code>data/happiness_report.csv</code>) is the same on both computers; any code that uses relative paths will work on both!</p>
+<!--Why would the absolute path not work on a different computer? The reason for this is that the names and the folder structure of the path between a computer's root 
+folder (named `/`) and any files and folders you are usually working with will be different depending on who owns the computer (usually there is a different user name 
+on each computer) and where the files and folders happen to be located on that particular computer. -->
+<p>See this video for another explanation:</p>
+<iframe width="840" height="473" src="https://www.youtube.com/embed/ephId3mYu9o" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+<p><em>Source: <a href="https://www.udacity.com/course/linux-command-line-basics--ud595">Udacity course “Linux Command Line Basics”</a></em></p>
+</div>
+<div id="writing-and-reading-files" class="section level2" number="3.3">
+<h2>
+<span class="header-section-number">3.3</span> Writing and Reading Files<a class="anchor" aria-label="anchor" href="#writing-and-reading-files"><i class="fas fa-link"></i></a>
+</h2>
+<p>Getting data into and out of R is a major part of any real world data science project.</p>
+<div id="csv-files" class="section level3" number="3.3.1">
+<h3>
+<span class="header-section-number">3.3.1</span> CSV files<a class="anchor" aria-label="anchor" href="#csv-files"><i class="fas fa-link"></i></a>
+</h3>
+<p>“CSV” stands for <strong>c</strong>omma <strong>s</strong>eparated <strong>v</strong>alue. In other words, csv files are files whose values are separated by commas. Each comma from the csv file corresponds to a column, and the column names are taken from the first line of the file. The function then “guesses” an appropriate data type for each of the columns.</p>
+<p>In the real word, you often want to write a data frame that has changed (either through filtering, selecting, mutating or summarizing) to a file to share it with others. We use <code>write_csv()</code> to save a data frame to a .csv file. <code>write_csv()</code> has two main arguments: <code>x</code> and <code>path</code>. The <code>x</code> argument is the data set that you want to save. The <code>file</code> argument is the file path where you want to save the file. The end of the path argument is the name that you want to use for the file.</p>
+<!-- Does there need to be an example here? -->
+<p>We use <code>read_csv()</code> from the <strong>readr</strong> package to load the data into R, and in that call we specify the relative path to the file</p>
+<p>Consider the following csv file “test_2.csv.”</p>
+<div class="sourceCode" id="cb402"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">file_1</span> <span class="op">&lt;-</span> <span class="st">"https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/test_2.csv"</span>
+
+<span class="fu">read_csv</span><span class="op">(</span><span class="va">file_1</span><span class="op">)</span></code></pre></div>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   `Top two rows consist of junk which` = col_character()
+## )</code></pre>
+<pre><code>## Warning: 3 parsing failures.
+## row col  expected    actual                                                                                  file
+##   2  -- 1 columns 3 columns 'https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/test_2.csv'
+##   3  -- 1 columns 3 columns 'https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/test_2.csv'
+##   4  -- 1 columns 3 columns 'https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/test_2.csv'</code></pre>
+<pre><code>## # A tibble: 4 x 1
+##   `Top two rows consist of junk which`      
+##   &lt;chr&gt;                                     
+## 1 we don't care about. Data starts on row 3.
+## 2 a                                         
+## 3 9                                         
+## 4 4</code></pre>
+<p>As you can see, there is text at the top of this file. Often times information about how data was collected, or other relevant information, is included at the top of the data file. This does not allow us to correctly load the data into R, and it is not intended to be shown.</p>
+<p>We can use the <code>skip</code> argument to skip the text lines.</p>
+<div class="sourceCode" id="cb406"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">read_csv</span><span class="op">(</span>file <span class="op">=</span> <span class="va">file_1</span>,
+         skip <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></code></pre></div>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   a = col_double(),
+##   b = col_double(),
+##   c = col_double()
+## )</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##       a     b     c
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     9     8     7
+## 2     4     5     6</code></pre>
+<p>Do you see the column specification message? As of now, R “guesses” an appropriate data type for each of the columns. To get rid of this message, we use the <code>col_types()</code> argument and specify the data types.</p>
+<div class="sourceCode" id="cb409"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">read_csv</span><span class="op">(</span>file <span class="op">=</span> <span class="va">file_1</span>,
+         skip <span class="op">=</span> <span class="fl">1</span>,
+         col_types <span class="op">=</span> <span class="fu">cols</span><span class="op">(</span>a <span class="op">=</span> <span class="fu">col_double</span><span class="op">(</span><span class="op">)</span>,
+                          b <span class="op">=</span> <span class="fu">col_double</span><span class="op">(</span><span class="op">)</span>,
+                          c <span class="op">=</span> <span class="fu">col_double</span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<pre><code>## Warning: The following named parsers don't match the column names: a, b, c</code></pre>
+<pre><code>## Warning: 3 parsing failures.
+## row col  expected    actual                                                                                  file
+##   1  -- 1 columns 3 columns 'https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/test_2.csv'
+##   2  -- 1 columns 3 columns 'https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/test_2.csv'
+##   3  -- 1 columns 3 columns 'https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/test_2.csv'</code></pre>
+<pre><code>## # A tibble: 3 x 1
+##   `we don't care about. Data starts on row 3.`
+##   &lt;chr&gt;                                       
+## 1 a                                           
+## 2 9                                           
+## 3 4</code></pre>
+<p>When our tabular data comes in a different format, we can use the <code>read_delim()</code> function instead. For example, a different version of “test_2.csv” could exist that has no column names and uses tabs as the delimiter instead of commas.</p>
+<p>With <code>read_delim()</code>, we specify the first argument as the path to the file (as done with read_csv). Then we provide values to the <code>delim</code> argument (could be a tab, which we represent by ").</p>
+</div>
+<div id="excel-files" class="section level3" number="3.3.2">
+<h3>
+<span class="header-section-number">3.3.2</span> Excel Files<a class="anchor" aria-label="anchor" href="#excel-files"><i class="fas fa-link"></i></a>
+</h3>
+<p>Excel is a spreadsheet program that use tables to analyze, store, or manipulate data. The tables are composed of cells which include text, numbers, or formulas. Excel files have the filename extension .xlsx. They store additional things that you cannot store in a .csv file such as fonts, text formatting, graphics, etc.</p>
+<p>In order to write excel files you have to install complex packages, and they are hard to create. Writing excel files is beyond the scope of Primer.</p>
+<p>Reading Excel files is easy. To do so, we use the <code><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel()</a></code> function from the <strong>readxl</strong> package.</p>
+<div class="sourceCode" id="cb413"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://readxl.tidyverse.org">readxl</a></span><span class="op">)</span>
+
+<span class="co"># Unfortunately, it is not possible to read Excel files directly from the web.</span>
+<span class="co"># So we download the file by hand and then read it in from the current working</span>
+<span class="co"># directory. Note that the "proper" way of handling this would be to create a</span>
+<span class="co"># temp directory with tempdir(), download the file into that directory, read it,</span>
+<span class="co"># and then delete the temp directory. That way, you would not have random</span>
+<span class="co"># downloaed files hanging around.</span>
+
+<span class="fu"><a href="https://rdrr.io/r/utils/download.file.html">download.file</a></span><span class="op">(</span>url <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/PPBDS/primer.tutorials/master/inst/www/excel_1.xlsx"</span>, 
+              destfile <span class="op">=</span> <span class="st">"example_excel.xlsx"</span><span class="op">)</span>
+
+
+<span class="fu"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"example_excel.xlsx"</span><span class="op">)</span></code></pre></div>
+<pre><code>## # A tibble: 2 x 3
+##       a     b     c
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     1     2     3
+## 2     4     5     6</code></pre>
+<p>If the .xlsx file has multiple sheets, you have to use the sheet argument to specify the sheet number or name.</p>
+</div>
+<div id="rds" class="section level3" number="3.3.3">
+<h3>
+<span class="header-section-number">3.3.3</span> RDS<a class="anchor" aria-label="anchor" href="#rds"><i class="fas fa-link"></i></a>
+</h3>
+<p>rds files store a single R object within a file.</p>
+<p>When we save to a rds file, we use the function <code>write_rds()</code>. Just like <code>write_csv()</code>, this function has two main arguments: <code>x</code> and <code>file</code>. The <code>x</code> argument is the data set that you want to save. The <code>file</code> argument is the file path where you want to save the file. The end of the path argument is the name that you want to use for the file.</p>
+<p><code>read_rds()</code> reads the file back into R. Just like <code>read_csv()</code> <code>read_rds</code> has one main argument, which is the path to the file that you are wanting to read into R.</p>
+<div class="sourceCode" id="cb415"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># need example here</span></code></pre></div>
+</div>
+<div id="json" class="section level3" number="3.3.4">
+<h3>
+<span class="header-section-number">3.3.4</span> JSON<a class="anchor" aria-label="anchor" href="#json"><i class="fas fa-link"></i></a>
+</h3>
+<p>An increasingly common format for sharing data is <strong>J</strong>avaScript <strong>O</strong>bject <strong>N</strong>otation or JSON. Because this format is very general, it is nothing like a spreadsheet. Note that JSON files are often made available via the internet. Several organizations provide a JSON API or a web service that you can connect directly to and from which you can obtain data.</p>
+<p>The functions <code>fromJSON()</code> and <code>toJSON()</code> allow you to convert between R objects and JSON. Both functions come from the <strong>jsonlite</strong> package.</p>
+<p>The function <code>toJSON()</code> converts a tibble to JSON format.</p>
+<pre><code>## 
+## Attaching package: 'jsonlite'</code></pre>
+<pre><code>## The following object is masked from 'package:purrr':
+## 
+##     flatten</code></pre>
+<pre><code>## [
+##   {
+##     "name": "Miguel",
+##     "student_id": 1,
+##     "exam_1": 85,
+##     "exam_2": 86
+##   },
+##   {
+##     "name": "Sofia",
+##     "student_id": 2,
+##     "exam_1": 94,
+##     "exam_2": 93
+##   },
+##   {
+##     "name": "Aya",
+##     "student_id": 3,
+##     "exam_1": 87,
+##     "exam_2": 88
+##   },
+##   {
+##     "name": "Cheng",
+##     "student_id": 4,
+##     "exam_1": 90,
+##     "exam_2": 91
+##   }
+## ]</code></pre>
+<p>The function <code>fromJSON()</code> converts JSON format to a tibble.</p>
+<pre><code>##     Name Age Occupation
+## 1  Mario  32    Plumber
+## 2  Peach  21   Princess
+## 3   &lt;NA&gt;  NA       &lt;NA&gt;
+## 4 Bowser  NA      Koopa</code></pre>
+</div>
+</div>
+<div id="reading-data-from-a-database" class="section level2" number="3.4">
+<h2>
+<span class="header-section-number">3.4</span> Reading data from a database<a class="anchor" aria-label="anchor" href="#reading-data-from-a-database"><i class="fas fa-link"></i></a>
+</h2>
+<div id="reading-data-from-a-sqlite-database" class="section level3" number="3.4.1">
+<h3>
+<span class="header-section-number">3.4.1</span> Reading data from a SQLite database<a class="anchor" aria-label="anchor" href="#reading-data-from-a-sqlite-database"><i class="fas fa-link"></i></a>
+</h3>
+<p>SQLite is probably the simplest relational database that one can use in combination with R. SQLite databases are self-contained and usually stored and accessed locally on one computer. Data is usually stored in a file with a <code>.db</code> extension. Similar to Excel files, these are not plain text files and cannot be read in a plain text editor.</p>
+<p>The first thing you need to do to read data into R from a database is to connect to the database. We do that using <code>dbConnect()</code> function from the <strong>DBI</strong> (database interface) package. This does not read in the data, but simply tells R where the database is and opens up a communication channel.</p>
+<!-- ```{r} -->
+<!--  library(DBI) -->
+<!--  con_lang_data <- dbConnect(RSQLite::SQLite(), "data/can_lang.db") -->
+<!-- ``` -->
+<p>Often relational databases have many tables, and their power comes from the useful ways they can be joined. Thus anytime you want to access data from a relational database, you need to know the table names. You can get the names of all the tables in the database using <code>dbListTables()</code>.</p>
+<!-- ```{r} -->
+<!-- tables <- dbListTables(con_lang_data) -->
+<!-- tables -->
+<!-- ``` -->
+<p>We only get one table name returned, which tells us that there is only one table in this database. To reference a table in the database to do things like select columns and filter rows, we use the <code>tbl()</code> function from the <strong>dbplyr</strong> package. The package <strong>dbplyr</strong> allows us to work with data stored in databases as if they were local data frames, which is useful because we can do a lot with big datasets without actually having to bring these vast amounts of data into your computer!</p>
+<!-- ```{r} -->
+<!-- library(dbplyr) -->
+<!-- lang_db <- tbl(con_lang_data, "lang") -->
+<!-- lang_db -->
+<!-- ``` -->
+<p>Although it looks like we just got a data frame from the database, we didn’t! It’s a <em>reference</em>, showing us data that is still in the SQLite database (note the first two lines of the output). It does this because databases are often more efficient at selecting, filtering and joining large data sets than R. And typically, the database will not even be stored on your computer, but rather a more powerful machine somewhere on the web. So R is lazy and waits to bring this data into memory until you explicitly tell it. To do so, we use the <code>collect()</code> function.</p>
+<p>Here we will filter for only rows in the Aboriginal languages category according to the 2016 Canada Census, and then use <code>collect()</code> to finally bring this data into R as a data frame.</p>
+<!-- ```{r} -->
+<!-- aboriginal_lang_db <- filter(lang_db, category == "Aboriginal languages") -->
+<!-- aboriginal_lang_db -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- aboriginal_lang_data <- collect(aboriginal_lang_db) -->
+<!-- aboriginal_lang_data -->
+<!-- ``` -->
+<p>Why bother to use the <code>collect()</code> function? The data looks pretty similar in both outputs shown above. And <strong>dbplyr</strong> provides lots of functions similar to <code><a href="https://dplyr.tidyverse.org/reference/filter.html">filter()</a></code> that you can use to directly feed the database reference (i.e. what <code>tbl()</code> gives you) into downstream analysis functions (e.g., <code>ggplot2</code> for data visualization and <code>lm</code> for linear regression modeling). However, this does not work in every case; look what happens when we try to use <code>nrow</code> to count rows in a data frame:</p>
+<!-- ```{r} -->
+<!-- nrow(aboriginal_lang_db) -->
+<!-- ``` -->
+<p>or <code>tail</code> to preview the last 6 rows of a data frame:</p>
+<pre><code><a href="https://rdrr.io/r/utils/head.html">tail(aboriginal_lang_db)</a></code></pre>
+<pre><code>## Error: tail() is not supported by sql sources</code></pre>
+<p>Additionally, some operations will not work to extract columns or single values from the reference given by the <code>tbl</code> function. Thus, once you have finished your data wrangling of the <code>tbl()</code> database reference object, it is advisable to bring it into your local machine’s memory using <code>collect()</code> as a data frame.</p>
+<blockquote>
+<p>Warning: Usually, databases are very big! Reading the object into your local machine may give an error or take a lot of time to run so be careful if you plan to do this!</p>
+</blockquote>
+</div>
+<div id="reading-data-from-a-postgresql-database" class="section level3" number="3.4.2">
+<h3>
+<span class="header-section-number">3.4.2</span> Reading data from a PostgreSQL database<a class="anchor" aria-label="anchor" href="#reading-data-from-a-postgresql-database"><i class="fas fa-link"></i></a>
+</h3>
+<p>PostgreSQL (also called Postgres) is a very popular and open-source option for relational database software. Unlike SQLite, PostgreSQL uses a client–server database engine, as it was designed to be used and accessed on a network. This means that you have to provide more information to R when connecting to Postgres databases. The additional information that you need to include when you call the <code>dbConnect()</code> is listed below:</p>
+<ul>
+<li>
+<code>dbname</code> - the name of the database (a single PostgreSQL instance can host more than one database)</li>
+<li>
+<code>host</code> - the URL pointing to where the database is located</li>
+<li>
+<code>port</code> - the communication endpoint between R and the PostgreSQL database (this is typically 5432 for PostgreSQL)</li>
+<li>
+<code>user</code> - the username for accessing the database</li>
+<li>
+<code>password</code> - the password for accessing the database</li>
+</ul>
+<p>Additionally, we must use the <strong>RPostgres</strong> package instead of <strong>RSQLite</strong> in the <code>dbConnect()</code> function call. Below we demonstrate how to connect to a version of the <code>can_mov_db</code> database, which contains information about Canadian movies (<em>note - this is a synthetic, or artificial, database</em>).</p>
+<pre><code><a href="https://rdrr.io/r/base/library.html">library(RPostgres)
+can_mov_db_con &lt;- dbConnect(RPostgres::Postgres(), dbname = "can_mov_db",
+                        host = "r7k3-mds1.stat.ubc.ca", port = 5432,
+                        user = "user0001", password = '################')</a></code></pre>
+</div>
+<div id="interacting-with-a-database" class="section level3" number="3.4.3">
+<h3>
+<span class="header-section-number">3.4.3</span> Interacting with a database<a class="anchor" aria-label="anchor" href="#interacting-with-a-database"><i class="fas fa-link"></i></a>
+</h3>
+<p>After opening the connection, everything looks and behaves almost identically to when we were using an SQLite database in R. For example, we can again use <code>dbListTables()</code> to find out what tables are in the <code>can_mov_db</code> database:</p>
+<pre><code>dbListTables(can_mov_db_con)</code></pre>
+<pre><code> [1] "themes"            "medium"           "titles"     "title_aliases"       "forms"            
+ [6] "episodes"          "names"      "names_occupations" "occupation"       "ratings" </code></pre>
+<p>We see that there are 10 tables in this database. Let’s first look at the <code>"ratings"</code> table to find the lowest rating that exists in the <code>can_mov_db</code> database:</p>
+<pre><code>ratings_db &lt;- tbl(can_mov_db_con, "ratings")
+ratings_db</code></pre>
+<pre><code># Source:   table&lt;ratings&gt; [?? x 3]
+# Database: postgres [user0001@r7k3-mds1.stat.ubc.ca:5432/can_mov_db]
+   title              average_rating num_votes
+   &lt;chr&gt;                    &lt;dbl&gt;     &lt;int&gt;
+ 1 The Grand Seduction       6.6       150
+ 2 Rhymes for Young Ghouls   6.3      1685
+ 3 Mommy                     7.5      1060
+ 4 Incendies                 6.1      1101
+ 5 Bon Cop, Bad Cop          7.0       894
+ 6 Goon                      5.5      1111
+ 7 Monsieur Lazhar           5.6       610
+ 8 What if                   5.3      1401
+ 9 The Barbarian Invations   5.8        99
+10 Away from Her             6.9      2311
+# … with more rows</code></pre>
+<p>To find the lowest rating that exists in the data base, we first need to extract the <code>average_rating</code> column using <code><a href="https://dplyr.tidyverse.org/reference/select.html">select()</a></code>:</p>
+<pre><code>avg_rating_db &lt;- select(ratings_db, average_rating)
+avg_rating_db</code></pre>
+<pre><code># Source:   lazy query [?? x 1]
+# Database: postgres [user0001@r7k3-mds1.stat.ubc.ca:5432/can_mov_db]
+   average_rating
+            &lt;dbl&gt;
+ 1            6.6
+ 2            6.3
+ 3            7.5
+ 4            6.1
+ 5            7.0
+ 6            5.5
+ 7            5.6
+ 8            5.3
+ 9            5.8
+10            6.9
+# … with more rows</code></pre>
+<p>Next we use <code><a href="https://rdrr.io/r/base/Extremes.html">min()</a></code> to find the minimum rating in that column:</p>
+<pre><code><a href="https://rdrr.io/r/base/Extremes.html">min(avg_rating_db)</a></code></pre>
+<pre><code>Error in min(avg_rating_db) : invalid 'type' (list) of argument</code></pre>
+<p>Instead of the minimum, we get an error! This is another example of when we need to use the <code>collect()</code> function to bring the data into R for further computation:</p>
+<pre><code>avg_rating_data &lt;- collect(avg_rating_db)
+min(avg_rating_data)</code></pre>
+<pre><code>[1] 1</code></pre>
+<p>We see the lowest rating given to a movie is 1, indicating that it must have been a really bad movie…</p>
+<p><strong>Why should we bother with databases at all?</strong></p>
+<p>Opening a database stored in a <code>.db</code> file involved a lot more effort than just opening a <code>.csv</code>, <code>.tsv</code>, or any of the other plain text or Excel formats. It was a bit of a pain to use a database in that setting since we had to use <code>dbplyr</code> to translate <code>tidyverse</code>-like commands (<code>filter</code>, <code>select</code>, <code>head</code>, etc.) into SQL commands that the database understands. Not all <code>tidyverse</code> commands can currently be translated with SQLite databases. For example, we can compute a mean with an SQLite database but can’t easily compute a median. So you might be wondering why should we use databases at all?</p>
+<p>Databases are beneficial in a large-scale setting:</p>
+<ul>
+<li>they enable storing large data sets across multiple computers with automatic redundancy and backups</li>
+<li>they allow multiple users to access them simultaneously and remotely without conflicts and errors</li>
+<li>they provide mechanisms for ensuring data integrity and validating input</li>
+<li>they provide security to keep data safe
+For example, <a href="https://www.internetlivestats.com/google-search-statistics/">there are billions of Google searches conducted daily</a>.</li>
+</ul>
+</div>
+</div>
+<div id="webscraping" class="section level2" number="3.5">
+<h2>
+<span class="header-section-number">3.5</span> Webscraping<a class="anchor" aria-label="anchor" href="#webscraping"><i class="fas fa-link"></i></a>
+</h2>
+<p>In the first part of this chapter, we learned how to read in data from plain text files that are usually “rectangular” in shape using the <code>tidyverse</code> <code>read_*</code> functions. Sadly, not all data comes in this simple format, but we can happily use many other tools to read in more messy/wild data formats. The formal name for gathering non-rectangular data from the web and transforming it into a more useful format for data analysis is <strong>web scraping</strong>.</p>
+<div id="html-and-css-selectors" class="section level3" number="3.5.1">
+<h3>
+<span class="header-section-number">3.5.1</span> HTML and CSS selectors<a class="anchor" aria-label="anchor" href="#html-and-css-selectors"><i class="fas fa-link"></i></a>
+</h3>
+<p>Before we jump into scraping, let’s learn a little bit about what the “source code” of a website looks like. Say we are interested in knowing the average rental price (per square footage) of the most recently available one-bedroom apartments in Vancouver from <a href="https://vancouver.craigslist.org" class="uri">https://vancouver.craigslist.org</a>. When we visit the Vancouver Craigslist website and search for one-bedroom apartments, this is what we are shown:</p>
+<div class="inline-figure"><img src="03-data/images/craigslist_human.png"></div>
+<p>From that page, it’s pretty easy for our human eyes to find the apartment price and square footage. But how can we do this programmatically, so we don’t have to copy and paste all these numbers? Well, we have to deal with the webpage source code, which we show a snippet of below (and link to the <a href="img/website_source.txt">entire source code here</a>):</p>
+<pre><code>        &lt;span class="result-meta"&gt;
+                &lt;span class="result-price"&gt;$800&lt;/span&gt;
+
+                &lt;span class="housing"&gt;
+                    1br -
+                &lt;/span&gt;
+
+                &lt;span class="result-hood"&gt; (13768 108th Avenue)&lt;/span&gt;
+
+                &lt;span class="result-tags"&gt;
+                    &lt;span class="maptag" data-pid="6786042973"&gt;map&lt;/span&gt;
+                &lt;/span&gt;
+
+                &lt;span class="banish icon icon-trash" role="button"&gt;
+                    &lt;span class="screen-reader-text"&gt;hide this posting&lt;/span&gt;
+                &lt;/span&gt;
+
+            &lt;span class="unbanish icon icon-trash red" role="button" aria-hidden="true"&gt;&lt;/span&gt;
+            &lt;a href="#" class="restore-link"&gt;
+                &lt;span class="restore-narrow-text"&gt;restore&lt;/span&gt;
+                &lt;span class="restore-wide-text"&gt;restore this posting&lt;/span&gt;
+            &lt;/a&gt;
+
+        &lt;/span&gt;
+    &lt;/p&gt;
+&lt;/li&gt;
+         &lt;li class="result-row" data-pid="6788463837"&gt;
+
+        &lt;a href="https://vancouver.craigslist.org/nvn/apa/d/north-vancouver-luxury-1-bedroom/6788463837.html" class="result-image gallery" data-ids="1:00U0U_lLWbuS4jBYN,1:00T0T_9JYt6togdOB,1:00r0r_hlMkwxKqoeq,1:00n0n_2U8StpqVRYX,1:00M0M_e93iEG4BRAu,1:00a0a_PaOxz3JIfI,1:00o0o_4VznEcB0NC5,1:00V0V_1xyllKkwa9A,1:00G0G_lufKMygCGj6,1:00202_lutoxKbVTcP,1:00R0R_cQFYHDzGrOK,1:00000_hTXSBn1SrQN,1:00r0r_2toXdps0bT1,1:01616_dbAnv07FaE7,1:00g0g_1yOIckt0O1h,1:00m0m_a9fAvCYmO9L,1:00C0C_8EO8Yl1ELUi,1:00I0I_iL6IqV8n5MB,1:00b0b_c5e1FbpbWUZ,1:01717_6lFcmuJ2glV"&gt;
+                &lt;span class="result-price"&gt;$2285&lt;/span&gt;
+        &lt;/a&gt;
+
+    &lt;p class="result-info"&gt;
+        &lt;span class="icon icon-star" role="button"&gt;
+            &lt;span class="screen-reader-text"&gt;favorite this post&lt;/span&gt;
+        &lt;/span&gt;
+
+            &lt;time class="result-date" datetime="2019-01-06 12:06" title="Sun 06 Jan 12:06:01 PM"&gt;Jan  6&lt;/time&gt;
+
+
+        &lt;a href="https://vancouver.craigslist.org/nvn/apa/d/north-vancouver-luxury-1-bedroom/6788463837.html" data-id="6788463837" class="result-title hdrlnk"&gt;Luxury 1 Bedroom CentreView with View - Lonsdale&lt;/a&gt;
+
+</code></pre>
+<p>This is not easy for our human eyeballs to read! However, it is easy for us to use programmatic tools to extract the data we need by specifying which HTML tags (things inside <code><a href="https://rdrr.io/r/base/Comparison.html">&lt;</a></code> and <code><a href="https://rdrr.io/r/base/Comparison.html">&gt;</a></code> in the code above). For example, if we look in the code above and search for lines with a price, we can also look at the tags that are near that price and see if there’s a common “word” we can use that is near the price but doesn’t exist on other lines that have the information we are not interested in:</p>
+<pre><code>&lt;span class="result-price"&gt;$800&lt;/span&gt;</code></pre>
+<p>and</p>
+<pre><code>&lt;span class="result-price"&gt;$2285&lt;/span&gt;</code></pre>
+<p>What we can see is there is a special “word” here, “result-price,” which appears only on the lines with prices and not on the other lines (that have information we are not interested in). This special word and the context in which is is used (learned from the other words inside the HTML tag) can be combined to create something called a <strong>CSS selector</strong>. The CSS selector can then be used by R’s <strong>rvest</strong> package to select the information we want (here price) from the website source code.</p>
+<p>Many websites are quite large and complex, which means the website source code is large as well. And as you saw above, it is not easy to read and pick out the special words we want with our human eyeballs. So to make this easier, we will use the <em>SelectorGadget</em> tool. It is an open source tool that simplifies generating and finding CSS selectors. We recommend you use the Chrome web browser to use this tool, and install the <a href="https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb">selector gadget tool from the Chrome Web Store</a>. Here is a short video on how to install and use the SelectorGadget tool to get a CSS selector for use in web scraping:</p>
+<iframe width="840" height="473" src="https://www.youtube.com/embed/YdIWI6K64zo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+<p>From installing and using the selectorgadget as shown in the video above, we get the two CSS selectors <code>.housing</code> and <code>.result-price</code> that we can use to scrape information about the square footage and the rental price, respectively. The selector gadget returns them to us as a comma separated list (here <code>.housing , .result-price</code>), which is exactly the format we need to provide to R if we are using more than one CSS selector.</p>
+</div>
+<div id="are-you-allowed-to-scrape-that-website" class="section level3" number="3.5.2">
+<h3>
+<span class="header-section-number">3.5.2</span> Are you allowed to scrape that website?<a class="anchor" aria-label="anchor" href="#are-you-allowed-to-scrape-that-website"><i class="fas fa-link"></i></a>
+</h3>
+<p><strong>BEFORE</strong> scraping data from the web, you should always check whether or not you are <strong>ALLOWED</strong> to scrape it! There are two documents that are important for this: the robots.txt file and reading the website’s Terms of Service document. The website’s Terms of Service document is probably the more important of the two, and so you should look there first. What happens when we look at Craigslist’s Terms of Service document? Well we read this:</p>
+<p><em>“You agree not to copy/collect CL content via robots, spiders, scripts, scrapers, crawlers, or any automated or manual equivalent (e.g., by hand).”</em></p>
+<p>source: <a href="https://www.craigslist.org/about/terms.of.use" class="uri">https://www.craigslist.org/about/terms.of.use</a></p>
+<blockquote>
+<p>Want to learn more about the legalities of web scraping and crawling? Read this interesting blog post titled <a href="https://benbernardblog.com/web-scraping-and-crawling-are-perfectly-legal-right/">“Web Scraping and Crawling Are Perfectly Legal, Right?” by Benoit Bernard</a> (this is optional, not required reading).</p>
+</blockquote>
+<p>So what to do now? Well, we shouldn’t scrape Craigslist! Let’s instead scrape some data on the population of Canadian cities from Wikipedia (who’s <a href="https://foundation.wikimedia.org/wiki/Terms_of_Use/en">Terms of Service document</a> does not explicitlty say do not scrape). In this video below we demonstrate using the selectorgadget tool to get CSS Selectors from <a href="https://en.wikipedia.org/wiki/Canada">Wikipedia’s Canada</a> page to scrape a table that contains city names and their populations from the 2016 Canadian Census:</p>
+<iframe width="840" height="473" src="https://www.youtube.com/embed/O9HKbdhqYzk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+</div>
+<div id="using-rvest" class="section level3" number="3.5.3">
+<h3>
+<span class="header-section-number">3.5.3</span> Using <code>rvest</code><a class="anchor" aria-label="anchor" href="#using-rvest"><i class="fas fa-link"></i></a>
+</h3>
+<p>Now that we have our CSS selectors we can use the <strong>rvest</strong> R package to scrape our desired data from the website. First we start by loading the <strong>rvest</strong> package:</p>
+<div class="sourceCode" id="cb436"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://rvest.tidyverse.org/">rvest</a></span><span class="op">)</span></code></pre></div>
+<pre><code>## 
+## Attaching package: 'rvest'</code></pre>
+<pre><code>## The following object is masked from 'package:readr':
+## 
+##     guess_encoding</code></pre>
+<p>Next, we tell R what page we want to scrape by providing the webpage’s URL in quotations to the function <code>read_html</code>:</p>
+<div class="sourceCode" id="cb439"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">page</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://xml2.r-lib.org/reference/read_xml.html">read_html</a></span><span class="op">(</span><span class="st">"https://en.wikipedia.org/wiki/Canada"</span><span class="op">)</span></code></pre></div>
+<p>Then we send the page object to the <code><a href="https://rvest.tidyverse.org/reference/rename.html">html_nodes()</a></code> function. We also provide that function with the CSS selectors we obtained from the selectorgadget tool. These should be surrounded by quotations. The <code>html_nodes</code> function select nodes from the HTML document using CSS selectors. Nodes are the HTML tag pairs as well as the content between the tags. For our CSS selector <code>td:nth-child(5)</code> and example node that would be selected would be: <code>&lt;td style="text-align:left;background:#f0f0f0;"&gt;&lt;a href="/wiki/London,_Ontario" title="London, Ontario"&gt;London&lt;/a&gt;&lt;/td&gt;</code></p>
+<p>We will use <code><a href="https://rdrr.io/r/utils/head.html">head()</a></code> here to limit the print output of these vectors to 6 lines.</p>
+<div class="sourceCode" id="cb440"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">population_nodes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rvest.tidyverse.org/reference/rename.html">html_nodes</a></span><span class="op">(</span><span class="va">page</span>, <span class="st">"td:nth-child(5) , td:nth-child(7) , .infobox:nth-child(122) td:nth-child(1) , .infobox td:nth-child(3)"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">population_nodes</span><span class="op">)</span></code></pre></div>
+<pre><code>## {xml_nodeset (6)}
+## [1] &lt;td style="text-align:right;"&gt;5,928,040&lt;/td&gt;
+## [2] &lt;td style="text-align:left;background:#f0f0f0;"&gt;&lt;a href="/wiki/London,_On ...
+## [3] &lt;td style="text-align:right;"&gt;494,069\n&lt;/td&gt;
+## [4] &lt;td style="text-align:right;"&gt;4,098,927&lt;/td&gt;
+## [5] &lt;td style="text-align:left;background:#f0f0f0;"&gt;\n&lt;a href="/wiki/St._Cath ...
+## [6] &lt;td style="text-align:right;"&gt;406,074\n&lt;/td&gt;</code></pre>
+<p>Next we extract the meaningful data from the HTML nodes using the <code><a href="https://rvest.tidyverse.org/reference/html_text.html">html_text()</a></code> function. For our example, this functions only required argument is the an html_nodes object, which we named <code>rent_nodes</code>. In the case of this example node: <code>&lt;td style="text-align:left;background:#f0f0f0;"&gt;&lt;a href="/wiki/London,_Ontario" title="London, Ontario"&gt;London&lt;/a&gt;&lt;/td&gt;</code>, the <code>html_text</code> function would return <code>London</code>.</p>
+<div class="sourceCode" id="cb442"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">population_text</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rvest.tidyverse.org/reference/html_text.html">html_text</a></span><span class="op">(</span><span class="va">population_nodes</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">population_text</span><span class="op">)</span></code></pre></div>
+<pre><code>## [1] "5,928,040"              "London"                 "494,069\n"             
+## [4] "4,098,927"              "St. Catharines–Niagara" "406,074\n"</code></pre>
+<p>Are we done? Not quite… If you look at the data closely you see that the data is not in an optimal format for data analysis. Both the city names and population are encoded as characters in a single vector instead of being in a data frame with one character column for city and one numeric column for population (think of how you would organize the data in a spreadsheet). Additionally, the populations contain commas (not useful for programmatically dealing with numbers), and some even contain a line break character at the end (<code>\n</code>).</p>
+</div>
+</div>
+<div id="working-with-apis" class="section level2" number="3.6">
+<h2>
+<span class="header-section-number">3.6</span> Working with APIs<a class="anchor" aria-label="anchor" href="#working-with-apis"><i class="fas fa-link"></i></a>
+</h2>
+<!-- source used here: https://bookdown.org/rdpeng/RProgDA/reading-web-based-data.html -->
+<p>“API” stands for Application Program Interface. They allow us to access open data from government agencies, companies, and other organizations. API provides the rules for software applications to interact with one another. Open data APIs provide the rules you need to know to write R code to request and pull data from the organization’s web server into R. Usually, some of the computational burden of querying and subsetting the data is taken on by the source’s server, to create the subset of requested data to pass to your computer. In practice, this means you can often pull the subset of data you want from a very large available dataset without having to download the full dataset and load it locally into your R session.</p>
+<p>As an overview, the basic steps for accessing and using data from a web API when working in R are:</p>
+<ul>
+<li>Figure out the API rules for HTTP requests</li>
+<li>Write R code to create a request in the proper format</li>
+<li>Send the request using GET or POST HTTP methods</li>
+<li>Once you get back data from the request, parse it into an easier-to-use format if necessary</li>
+</ul>
+<p>To get the data from an API, you should first read the organization’s API documentation. An organization will post details on what data is available through their API(s), as well as how to set up HTTP requests to get that data. To request the data through the API, you will typically need to send the organization’s web server an HTTP request using a GET or POST method. The API documentation details will typically show an example GET or POST request for the API, including the base URL to use and the possible query parameters that can be used to customize the dataset request.</p>
+<p>Here is an example:</p>
+<p>The National Aeronautics and Space Administration (NASA) has an API for pulling the <a href="https://apod.nasa.gov/apod/astropix.html">Astronomy Picture of the Day</a>. In their API documentation, they specify that the base URL for the API request should be <strong><a href="https://api.nasa.gov/planetary/apod" class="uri">https://api.nasa.gov/planetary/apod</a></strong> and that you can include parameters to specify the date of the daily picture you want, whether to pull a high-resolution version of the picture, and a NOAA API key you have requested from NOAA.</p>
+<p>Many organizations will require you to get an <em>API key</em> and use this key in each of your API requests. This key allows the organization to control API access, including enforcing rate limits per user. API rate limits restrict how often you can request data (such as an hourly limit of 1,000 requests per user for NASA APIs).</p>
+<p>API keys should be kept private, so if you are writing code that includes an API key, be very careful not to include the actual key in any code that is public (even any code in public GitHub repositories). To ensure privacy, save the value of your key in a file named .Renviron in your home directory. This file should be a plain text file and must end in a blank line. Once you’ve saved your API key to a global variable in that file (e.g., with a line added to the .Renviron file like NOAA_API_KEY = “abdafjsiopnab038”), you can assign the key value to an R object in an R session using the Sys.getenv function (e.g., noaa_api_key &lt;- Sys.getenv(“NOAA_API_KEY”)), and then use the object <code>noaa_api_key</code> anywhere you would otherwise have used the character string with your API key.</p>
+<p>To find more R packages for accessing and exploring open data, check out the <a href="https://github.com/ropensci/opendata">Open Data CRAN task view</a>. You can also browse through the <a href="https://ropensci.org/packages/">ROpenSci packages</a>, all of which have GitHub repositories where you can further explore how each package works! ROpenSci is an organization with the mission to create open software tools for science. If you create your own package to access data relevant to scientific research through an API, consider submitting it for peer-review through ROpenSci.</p>
+<p>The <strong>riem</strong> package, developed by Maelle Salmon and an ROpenSci package, is an excellent and straightforward example of how you can use R to pull open data through a web API. This package allows you to pull weather data from airports around the world directly from the Iowa Environmental Mesonet. To show you how to pull data into R through an API, in this section we will walk you through code in the <strong>riem</strong> package or code based closely on code in the package.</p>
+<p>To get a certain set of weather data from the Iowa Environmental Mesonet, you can send an HTTP request specifying a base URL, <strong><a href="https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py/" class="uri">https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py/</a></strong>, as well as some parameters describing the subset of dataset you want (e.g., date ranges, weather variables, output format). Once you know the rules for the names and possible values of these parameters (more on that below), you can submit an HTTP GET request using the function<code><a href="https://httr.r-lib.org/reference/GET.html">GET()</a></code> from the <strong>httr</strong> package.</p>
+<p>When you are making an HTTP request using the <code><a href="https://httr.r-lib.org/reference/GET.html">GET()</a></code> or <code><a href="https://httr.r-lib.org/reference/POST.html">POST()</a></code> functions from the <strong>httr</strong> package, you can include the key-value pairs for any query parameters as a list object in the <code>query</code> argument of the function. For example, suppose you want to get wind speed in miles per hour (data = “sped”) for Denver, CO, (station = “DEN”) for the month of June 2016 (year1 = “2016,” month1 = “6,” etc.) in Denver’s local time zone (tz = “America/Denver”) and in a comma-separated file (format = “comma”). To get this weather dataset, you can run:</p>
+<div class="sourceCode" id="cb444"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://httr.r-lib.org/">httr</a></span><span class="op">)</span>
+<span class="va">meso_url</span> <span class="op">&lt;-</span> <span class="st">"https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py/"</span>
+<span class="va">denver</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://httr.r-lib.org/reference/GET.html">GET</a></span><span class="op">(</span>url <span class="op">=</span> <span class="va">meso_url</span>,
+                    query <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>station <span class="op">=</span> <span class="st">"DEN"</span>,
+                                 data <span class="op">=</span> <span class="st">"sped"</span>,
+                                 year1 <span class="op">=</span> <span class="st">"2016"</span>,
+                                 month1 <span class="op">=</span> <span class="st">"6"</span>,
+                                 day1 <span class="op">=</span> <span class="st">"1"</span>,
+                                 year2 <span class="op">=</span> <span class="st">"2016"</span>,
+                                 month2 <span class="op">=</span> <span class="st">"6"</span>,
+                                 day2 <span class="op">=</span> <span class="st">"30"</span>,
+                                 tz <span class="op">=</span> <span class="st">"America/Denver"</span>,
+                                 format <span class="op">=</span> <span class="st">"comma"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
+  <span class="fu"><a href="https://httr.r-lib.org/reference/content.html">content</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu">read_csv</span><span class="op">(</span>skip <span class="op">=</span> <span class="fl">5</span>, na <span class="op">=</span> <span class="st">"M"</span><span class="op">)</span>
+
+<span class="co"># There are 9,106 rows of data to look at! Let's just look at subset for our purposes.</span>
+<span class="va">denver</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span></code></pre></div>
+<pre><code>## # A tibble: 3 x 3
+##   station valid                sped
+##   &lt;chr&gt;   &lt;dttm&gt;              &lt;dbl&gt;
+## 1 DEN     2016-06-01 00:00:00   9.2
+## 2 DEN     2016-06-01 00:05:00   9.2
+## 3 DEN     2016-06-01 00:10:00   6.9</code></pre>
+<p>The <code><a href="https://httr.r-lib.org/reference/content.html">content()</a></code> call extracts the content from the response to the HTTP request sent by the <code><a href="https://httr.r-lib.org/reference/GET.html">GET()</a></code> function. The Iowa Environmental Mesonet API offers the option to return the requested data in a comma-separated file (format = “comma” in the GET request), so here content and <code>read_csv()</code> are used to extract and read in that csv file. Usually, data will be returned in a JSON format instead.</p>
+<p>The only tricky part of this process is figuring out the available parameter names (e.g., station) and possible values for each (e.g., “DEN” for Denver). Currently, the details you can send in an HTTP request through Iowa Environmental Mesonet’s API include:</p>
+<ul>
+<li>A four-character weather station identifier (<code>station</code>)</li>
+<li>The weather variables (e.g., temperature, wind speed) to include (<code>data</code>)</li>
+<li>Starting and ending dates describing the range for which you’d like to pull data (<code>year1</code>, <code>month1</code>, <code>day1</code>, <code>year2</code>, <code>month2</code>, <code>day2</code>)</li>
+<li>The time zone to use for date-times for the weather observations (<code>tz</code>)</li>
+<li>Different formatting options (e.g., delimiter to use in the resulting data file [<code>format</code>], whether to include longitude and latitude)</li>
+</ul>
+<p>Typically, these parameter names and possible values are explained in the API documentation. In some cases, however, the documentation will be limited. In that case, you may be able to figure out possible values, especially if the API specifies a GET rather than POST method, by playing around with the website’s point-and-click interface and then looking at the url for the resulting data pages. For example, if you look at the <a href="https://mesonet.agron.iastate.edu/request/download.phtml?network=IN__ASOS">Iowa Environmental Mesonet’s page</a> for accessing this data, you’ll notice that the point-and-click web interface allows you the options in the list above, and if you click through to access a dataset using this interface, the web address of the data page includes these parameter names and values.</p>
+<p>The <strong>riem</strong> package implements all these ideas in three very clean and straightforward functions. You can explore the code behind this package and see how these ideas can be incorporated into a small R package, in the /R directory of the <a href="https://github.com/ropensci/riem">package’s GitHub page</a>.</p>
+<p>R packages already exist for many open data APIs. If an R package already exists for an API, you can use functions from that package directly, rather than writing your own code using the API protocols and httr functions. Other examples of existing R packages to interact with open data APIs include:</p>
+<ol style="list-style-type: decimal">
+<li>twitteR: Twitter</li>
+<li>rnoaa: National Oceanic and Atmospheric Administration</li>
+<li>Quandl: Quandl (financial data)</li>
+<li>RGoogleAnalytics: Google Analytics</li>
+<li>censusr, acs: United States Census</li>
+<li>WDI, wbstats: World Bank</li>
+<li>GuardianR, rdian: The Guardian Media Group</li>
+<li>blsAPI: Bureau of Labor Statistics</li>
+<li>rtimes: New York Times</li>
+<li>dataRetrieval, waterData: United States Geological Survey
+If an R package doesn’t exist for an open API and you’d like to write your own package, find out more about writing API packages with <a href="https://cran.r-project.org/web/packages/httr/vignettes/api-packages.html">this vignette for the httr package</a>. This document includes advice on error handling within R code that accesses data through an open API.</li>
+</ol>
+<p>Information for this section on API’s was taken from <em>Mastering Software Development in R</em> textbook, authored by Roger D. Peng, Sean Kross, and Brooke Anderson.</p>
+</div>
+<div id="summary-3" class="section level2" number="3.7">
+<h2>
+<span class="header-section-number">3.7</span> Summary<a class="anchor" aria-label="anchor" href="#summary-3"><i class="fas fa-link"></i></a>
+</h2>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="wrangling.html"><span class="header-section-number">2</span> Wrangling</a></div>
+<div class="next"><a href="rubin-causal-model.html"><span class="header-section-number">4</span> Rubin Causal Model</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#data"><span class="header-section-number">3</span> Data</a></li>
+<li><a class="nav-link" href="#introduction"><span class="header-section-number">3.1</span> Introduction</a></li>
+<li><a class="nav-link" href="#absolute-and-relative-file-paths"><span class="header-section-number">3.2</span> Absolute and relative file paths</a></li>
+<li>
+<a class="nav-link" href="#writing-and-reading-files"><span class="header-section-number">3.3</span> Writing and Reading Files</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#csv-files"><span class="header-section-number">3.3.1</span> CSV files</a></li>
+<li><a class="nav-link" href="#excel-files"><span class="header-section-number">3.3.2</span> Excel Files</a></li>
+<li><a class="nav-link" href="#rds"><span class="header-section-number">3.3.3</span> RDS</a></li>
+<li><a class="nav-link" href="#json"><span class="header-section-number">3.3.4</span> JSON</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#reading-data-from-a-database"><span class="header-section-number">3.4</span> Reading data from a database</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#reading-data-from-a-sqlite-database"><span class="header-section-number">3.4.1</span> Reading data from a SQLite database</a></li>
+<li><a class="nav-link" href="#reading-data-from-a-postgresql-database"><span class="header-section-number">3.4.2</span> Reading data from a PostgreSQL database</a></li>
+<li><a class="nav-link" href="#interacting-with-a-database"><span class="header-section-number">3.4.3</span> Interacting with a database</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#webscraping"><span class="header-section-number">3.5</span> Webscraping</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#html-and-css-selectors"><span class="header-section-number">3.5.1</span> HTML and CSS selectors</a></li>
+<li><a class="nav-link" href="#are-you-allowed-to-scrape-that-website"><span class="header-section-number">3.5.2</span> Are you allowed to scrape that website?</a></li>
+<li><a class="nav-link" href="#using-rvest"><span class="header-section-number">3.5.3</span> Using rvest</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#working-with-apis"><span class="header-section-number">3.6</span> Working with APIs</a></li>
+<li><a class="nav-link" href="#summary-3"><span class="header-section-number">3.7</span> Summary</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+<li><a id="book-source" href="https://github.com/PPBDS/primer/blob/master/03-data.Rmd">View source <i class="fab fa-github"></i></a></li>
+          <li><a id="book-edit" href="https://github.com/PPBDS/primer/edit/master/03-data.Rmd">Edit this page <i class="fab fa-github"></i></a></li>
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>Preceptor’s Primer for Bayesian Data Science</strong>" was written by David Kane. </p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+</html>

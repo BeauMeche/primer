@@ -5,16 +5,7 @@
 <!-- Review concept of dummy variables in the context of the intercept model with categorical predictor. -->
 
 
-<!-- Need to add a plot of fitted values and raw data. This will look a bit weird since, for each model, there are only two fitted values. Best is a jittered scatter plot with two columns, and then the fitted values put in the middle in red. -->
-
-<!-- governors %>%  -->
-<!--   ggplot(aes(sex, alive_post)) +  -->
-<!--     geom_jitter(width = 0.1, alpha = 0.2) +  -->
-<!--     geom_point(data = sex_means, aes(y = avg), color = "red") -->
-<!-- ``` -->
-
-
-Models have parameters. In Chapter \@ref(one-parameter) we created models with a single parameter $p$, the proportion of red beads in an urn. In Chapter \@ref(two-parameters), we used models with two parameters: $\mu$ (the average height in the population, generically known as a model "intercept") and $\sigma$ (the variation in height in the population). Here --- can you guess where this is going? --- we will build models with three parameters: $\sigma$ (which serves the same role throughout the book) and two coefficients. In models which relate a continuous predictor to the outcome, those two parameters will be labeled $\beta_0$ and $\beta_1$. In models which estimate two averages, the parameters will be $\beta_1$ and $\beta_2$. All this notation is confusing, not least because different academic fields use inconsistent schemes. The key is to just follow the Cardinal Virtues and tackle your problem step by step.
+Models have parameters. In Chapter \@ref(one-parameter) we created models with a single parameter $p$, the proportion of red beads in an urn. In Chapter \@ref(two-parameters), we used models with two parameters: $\mu$ (the average height in the population, generically known as a model "intercept") and $\sigma$ (the variation in height in the population). Here --- can you guess where this is going? --- we will build models with three parameters: $\sigma$ (which serves the same role throughout the book) and two coefficients. In models which relate a continuous predictor to the outcome, those two parameters will be labeled $\beta_0$ and $\beta_1$. In models which estimate two averages, the parameters will be $\beta_1$ and $\beta_2$. All this notation is confusing, not least because different academic fields use inconsistent schemes. Follow the Cardinal Virtues and tackle your problem step by step.
 
 <!-- DK: More detail? -->
 
@@ -26,7 +17,7 @@ We want to build a model and then use that model to make claims about the world.
 
 *What is the expected age of a Democrat at the train station?*
 
-*In a group of three Democrats and three Republicans, what age difference should we expect between the oldest Democrat and the youngest Republican?* 
+*In a group of three Democrats and three Republicans, what will the age difference be between the oldest Democrat and the youngest Republican?* 
 
 We can answer these and similar questions by creating a model that uses party affiliation to predict age
 
@@ -41,7 +32,7 @@ Wisdom begins with a look at your data.
 #### EDA for `trains`
 
 
-*Always explore your data.* To demonstrate modeling with three parameters, we will use the `trains` data set from the **primer.data** package. Recall the discussion from Chapter \@ref(rubin-causal-model). @enos2014 randomly placed Spanish-speaking confederates on nine train platforms around Boston, Massachusetts. Exposure to Spanish-speakers -- the `treatment` -- influenced attitudes toward immigration. These reactions were measured through changes in answers to three survey questions. Let's load the libraries we will need in this chapter, all of which we have used before, and look at the data.
+*Always explore your data.* To demonstrate modeling with three parameters, we will use the `trains` data set from the **primer.data** package. Recall the discussion from Chapter \@ref(rubin-causal-model). @enos2014 randomly placed Spanish-speaking confederates on nine train platforms around Boston, Massachusetts. Exposure to Spanish-speakers -- the `treatment` -- influenced attitudes toward immigration. These reactions were measured through changes in answers to three survey questions. Load the necessary libraries and look at the data.
 
 ```{r, message=FALSE}
 library(primer.data)
@@ -65,7 +56,7 @@ It is always smart to look at a some random samples of the data:
 
 ```{r}
 ch8 %>% 
-  sample_n(5)
+  slice_sample(n = 5)
 ```
 
 `att_end` is a measure of person's attitude toward immigration. A higher number means more conservative, i.e., a more exclusionary stance toward immigration into the United States. 
@@ -75,7 +66,7 @@ ch8 %>%
   glimpse()
 ```
 
-Pay attention to the variable types. Do they make sense? Perhaps. But there are certainly grounds for suspicion. Why are `age` and `att_end` doubles rather than integers? All the values in the data appear to be integers, so there is no benefit to having these variables be doubles. Why is `party` a character variable and `treatment` a factor variable? It could be that these are intentional choices made by the creator of the tibble, i.e., us. These could be mistakes. Or, most likely, these choices are a mixture of sensible and arbitrary. Regardless, it is your responsibility to notice them. You can't make a good model without looking closely at the data which you are using.
+Pay attention to the variable types. Do they make sense? Perhaps. But there are certainly grounds for suspicion. Why is  `att_end` a double rather than an integer? All the values in the data appear to be integers, so there is no benefit to having these variables be doubles. Why is `party` a character variable and `treatment` a factor variable? It could be that these are intentional choices made by the creator of the tibble, i.e., us. Or, these could be mistakes. Most likely, these choices are a mixture of sensible and arbitrary. Regardless, it is your responsibility to notice them. You can't make a good model without looking closely at the data which you are using.
 
 ```{r}
 ch8 %>% 
@@ -102,11 +93,11 @@ There are more Democrats in this dataset than Republicans. Democrats also span a
 
 <!-- DK: Could do more here. -->
 
-In data science, there are two main aspects to Wisdom: representativeness and ethics. The data that we have are very limited. There are only 115 observations, all from 2012 and involving train commuters to Boston. How useful will this data be today, or for other populations around Boston, or for other cities in the US? Only your judgment, along with advice from your colleagues, can guide you.
+The data that we have are very limited. There are only 115 observations, all from 2012 and involving train commuters to Boston. How useful will this data be today, or for other populations around Boston, or for other cities in the US? Only your judgment, along with advice from your colleagues, can guide you.
 
-The key concept is the idea of a "population." From which larger population is the data we have being (conceptually) drawn? If we were only interested in the age of indidividuals in our data set, we would have no need for inference. *We know everyone's ages already.* We only need tools like `stan_glm()` if we seek to understand individuals not in our data. Only if our data is "representative," at least to some extent, of that larger population can we use our data to answer our questions.
+The key concept is the idea of a "population." From which larger population is the data we have being (conceptually) drawn? If we were only interested in the age of individuals in our data set, we would have no need for inference. *We know everyone's ages already.* We only need tools like `stan_glm()` if we seek to understand individuals not in our data. Only if our data is "representative," at least to some extent, of that larger population can we use our data to answer our questions.
 
-The ethical issues are, fortunately, not fraught. Estimating someone's age is (universally?) viewed as OK. Estimating someone's health or income or criminal record are far dicier. 
+
 
 
 ### Justice
@@ -175,15 +166,15 @@ Don't panic dear poets and philosophers, the whole thing is easier than it looks
 
 * On the left-hand side we have the outcome, $y_i$, which is the variable to be explained. In our case, this is the age of an individual in the population.
 
-* On the right-hand side we first have the part contained in the model, consisting of two similar terms. Each term consists of a parameter and a data point. The betas are our two parameters: $\beta_1$ is the average age of Republicans in the population and $\beta_2$ is the average age of Democrats in the population.  $republican_i$ and $democrat_i$ are our explanatory variables and take the values 1 or 0. If someone is a Republican we have $republican_i = 1$ and $democrat_i = 0$, if someone is a Democrat we have $republican_i = 0$ and $democrat_i = 1$. In other words, their values mutually exclusive -- if you are a Democrat, you cannot also be a Republican.
+* On the right-hand side we first have the part contained in the model: two similar terms added together. Each term consists of a parameter and a data point. The betas are our two parameters: $\beta_1$ is the average age of Republicans in the population and $\beta_2$ is the average age of Democrats in the population.  $republican_i$ and $democrat_i$ are our explanatory variables and take the values 1 or 0. If person $i$ is a Republican we have $republican_i = 1$ and $democrat_i = 0$. If person $i$ is a Democrat we have $republican_i = 0$ and $democrat_i = 1$. In other words, their values are mutually exclusive -- if you are a Democrat, you cannot also be a Republican.
 
 <!-- DK: "Connected to" is awkward here. -->
 
-* The last part, $\epsilon_i$ (“epsilon”), represents the unexplained part and is called the error term. It is simply the difference between the outcome and our model predictions. This includes all factors that have an influence on someone's age but are not connected to party affiliation. We assume that this error follows a normal distribution with an expected value of 0 (meaning it is 0 on average).
+* The last part, $\epsilon_i$ (“epsilon”), represents the unexplained part of the outcome and is called the error term. It is simply the difference between the outcome and our model predictions. This includes all factors that have an influence on someone's age but are not connected to party affiliation. We assume that this error follows a normal distribution with an expected value of 0 (meaning it is 0 on average).
 
-* The small $i$'s are an index to number observations. It is equivalent to the "ID" column in our Preceptor Table and simply states that the outcome for person $i$ is explained by the modeled and non-modeled factors for person $i$. 
+* The small $i$'s are an index to number the observations. It is equivalent to the "ID" column in our Preceptor Table and simply states that the outcome for person $i$ is explained by the modeled and non-modeled factors for person $i$. 
 
-* Keep in mind that the model is a claim about how the world works, not just for the 115 individuals for which we have data but for the all the people in the population for which we seek to draw inferences.
+* The model is a claim about how the world works, not just for the 115 individuals for which we have data but for the all the people in the population for which we seek to draw inferences.
 
 * Although terminology differs across academic fields, the most common term to describe a model like this is a "regression." We are "regressing" `age` on `party` in order to see if they are associated with each other. The formula above is a "regression formula", and the model is a "regression model." This terminology would also apply to our model of `height` in Chapter \@ref(two-parameters). 
 
@@ -200,7 +191,7 @@ knitr::include_graphics("other/images/Courage.jpg")
 Courage allows us to translate math to code.
 
 
-To get posterior distributions for our three parameters, we will again use `stan_glm()`, just as we did in Chapter \@ref(two-parameters). If we take a look at the formula, we can see that it is similar to the equation from before. 
+To get posterior distributions for our three parameters, we will again use `stan_glm()`, just as we did in Chapter \@ref(two-parameters). 
 
 ```{r}
 fit_1 <- stan_glm(age ~ party - 1, 
@@ -259,7 +250,7 @@ The unknown parameters $\beta_1$ (partyDemocrat) and $\beta_2$ (partyRepublican)
 
 * The phrase "in the population" is doing a great deal of work because we have not said what, precisely, we mean by the "population." Is it the set of people on those commuter platforms on those days in 2012 when the experiment was done? Is it the set of people on all platforms, including ones never visited? Is it the set of all Boston commuter? All Massachusetts residents? All US residents? Does it include people today, or can we only draw inferences for 2012? We will explore these questions in every model we create.
 
-* The parameters $\beta_1$ and $\beta_2$ can be interpreted in two ways. First, like all parameters, they are a part of the model. We need to estimate them. But, in many cases, we don't really care what the value of the parameter is. The exact value of $\sigma$, for examole, does not really matter. Second, some parameters have a substantive interpretaion, as with $\beta_1$ and $\beta_2$ being the average ages in the population. But this will often not be the case! Fortunately, with such models, we can use functions like `posterior_epred()` and `posterior_predict()` to answer our questions.
+* The parameters $\beta_1$ and $\beta_2$ can be interpreted in two ways. First, like all parameters, they are a part of the model. We need to estimate them. But, in many cases, we don't really care what the value of the parameter is. The exact value of $\sigma$, for example, does not really matter. Second, some parameters have a substantive interpretaion, as with $\beta_1$ and $\beta_2$ being the average ages in the population. But this will often not be the case! Fortunately, with such models, we can use functions like `posterior_epred()` and `posterior_predict()` to answer our questions.
 
 
 Consider a table which shows a sample of 8 individuals.
@@ -391,7 +382,7 @@ sum(pp$`1` > 50) / nrow(pp)
 
 Recall the second question:
 
-* In a group of three Democrats and three Republicans, what age difference should we expect between the oldest Democrat and the youngest Republican?
+* In a group of three Democrats and three Republicans, what will the age difference be between the oldest Democrat and the youngest Republican? 
 
 As before we start by creating a tibble with the desired input. Note that the name of the column ("party") and the observations ("Democrat", "Republican") must always be *exactly* as they are in the original data set. This tibble as well as our model can then be used as arguments for `posterior_predict()`:
 
@@ -754,7 +745,7 @@ We would not expect a treatment effect of this magnitude to be common, but, at t
 
 So far, we have only created models in which the predictor variable is discrete, with two possible values. `party` is either "Democrat" or "Republican". `treatment` is either "Treated" or "Control". Often times, however, the predictor variable will be continuous. Fortunately, the exact same approach works in this case. Consider:
 
-* What would you expect the income to be for a 40-year old?
+* *What would you expect the income to be for a 40-year old?*
 
 ### Wisdom
 
@@ -786,25 +777,24 @@ knitr::include_graphics("other/images/Justice.jpg")
 
 The mathematics for a continuous predictor is unchanged from the intercept-including example we explored in Section \@ref(addendum):
 
-$$ y_i = \beta_0  + \beta_1 age_i + \epsilon_i$$
+$$y_i = \beta_0  + \beta_1 age_i + \epsilon_i$$
 
-When comparing two people (persons 1 and 2), the first one year older than the second, $\beta_1$ is the expected difference in their incomes. The algebra is simple:
+When comparing two people (persons 1 and 2), the first one year older than the second, $\beta_1$ is the expected difference in their incomes. The algebra is simple. Start with the two individuals.
 
-$$ y_1 = \beta_0  + \beta_1 age_1$$
-$$ y_2 = \beta_0  + \beta_1 age_2$$
-$$ y_1 - y_2 = \beta_0  + \beta_1 age_1 - \beta_0 - \beta_1 age_2\\
+$$y_1 = \beta_0  + \beta_1 age_1$$
+$$y_2 = \beta_0  + \beta_1 age_2$$
+We want the difference between them, so we subtract the second from the first, performing that subtraction on both sides of the equals sign.
 
-
+$$y_1 - y_2 = \beta_0  + \beta_1 age_1 - \beta_0 - \beta_1 age_2\\
 y_1 - y_2 = \beta_1 age_1 - \beta_1 age_2\\
-
 y_1 - y_2 = \beta_1 (age_1 - age_2)$$
 
 So, if person 1 is one year older than person 2, we have:
 
 
-$$ y_1 - y_2 = \beta_1 (age_1 - age_2)\\
+$$y_1 - y_2 = \beta_1 (age_1 - age_2)\\
 y_1 - y_2 = \beta_1 (1)\\
-y_1 - y_2 = \beta_1 $$
+y_1 - y_2 = \beta_1$$
 
 The algebra demonstrates that $\beta_1$ is the same for all ages. The difference in expected income between two people aged 23 and 24 is the same as the difference between two people aged 80 and 81. Is that plausible? Maybe. *The algebra does not lie.* When we create a model like this, this is the assumption we are making.
 
@@ -921,28 +911,163 @@ pe %>%
 
 So far in this chapter, we have only considered *continuous* outcome variables. `age`, `att_end` and `income` all take on a variety of values. None of them are, truly, continuous, of course. `age` is only reported as an integer value. `att_end` can only, by definition, take on 13 distinct values. However, from a modeling perspective, what matters is that they have more than 2 possible values.
 
-`liberal`, however, only takes on two values: TRUE and FALSE. In order to model it, we must use the `binomial` family. 
+`liberal`, however, only takes on two values: TRUE and FALSE. In order to model it, we must use the `binomial` family. We begin, as always, with some questions:
 
 
-But first, following *Wisdom*, let's look at our data.
+*Among all people who have an income $100,000, what proportion are liberal?*
+
+*Assume we have a group of eight people, two of whom make $100,000, two $200,000, two $300,000 and two $400,000. How many will be liberal?*
+
+### Wisdom
+
+Look at our data.
 
 
 ```{r}
-ch8_lib_inc <- trains %>% 
-  select(liberal, income) %>% 
-  mutate(income = income / 1000)
+ch8 %>%
+  ggplot(aes(x = income, y = liberal)) + 
+  geom_jitter(width = 0, height = 0.1) + 
+  labs(title = "Liberal Status by Income in Trains Dataset",
+       subtitle = "Where the gap in the income distribution?",
+       x = "Income",
+       y = "Liberal") +
+  scale_x_continuous(labels = scales::dollar_format())
+```
 
-fit_4 <- stan_glm(data = ch8_lib_inc,
+Why is there only one observation with an income between $135,000 and $250,000? We don't know. The important thing is to notice it, to explore the variables you are using in the model.
+
+The second part of Wisdom is examining whether the data we have is representative of the overall population about which we seek to draw inferences. Our data is from 2012 and includes only Boston-area commuters. Our questions are, apparently, about today. Are they for the world, the US, the Boston-area, or just commuters at these select train stations? We don't know! The questions are not very precise. 
+
+One of the key jobs of a data scientist is to guide people --- our colleagues, bosses and clients --- toward asking precise questions. We must help them to translate English into inference. That translation requires precision. In this case, let's assume that the questions reference Boston-area commuters in 2021.
+
+So, is the data we have from 2012 representative of the data from 2021 about which we seek to draw inferences? Maybe? There is rarely a correct answer to this question. Some things have changed in Boston and some things have not. Our job is to think about these changes and adjust our confidence in our final answers accordingly. Or, in the worst case scenario, if there is no way to understand our actual data and our desired data as coming from the same population, we must stop the project right there.
+
+
+### Justice
+
+Recall the discussion in Section \@ref(zero-one-outcomes) about the logistic regression model which we use whenever the outcome or dependent variable is binary/logical. The math is there, if you care about math. We don't, at least not too much. Reminder:
+
+$$p(\text{Liberal}_i = \text{TRUE}) = \frac{\text{exp}(\beta_0 + \beta_1 \text{income}_i)}{1 + \text{exp}(\beta_0 + \beta_1 \text{income}_i)}$$
+
+This model only has two parameters, $\beta_0$ and $\beta_1$. But these parameters do not have simple interpretations, unlike the parameters in a linear (or gaussian) model.
+
+
+Recall the fundamental structure of all data science problems:
+
+$$\text{outcome} = \text{model} + \text{what is not in the model}$$
+The exact mathematics of the model --- the parameters, their interpretations --- are all just [dross](https://en.wikipedia.org/wiki/Dross) in the foundry of our inferences: unavoidable but not worth too much of our time. 
+
+Even if the math is ignorable, the causal versus predictive nature of the model is not. Is this a causal model or a predictive model? It depends! It could be causal if you assume that we can *manipulate* someone's income, if, that is, there are at least two potential outcomes: person $i$'s liberal status if she makes X dollars and person $i$'s liberal status if she makes Y dollars. Remember: *No causation without manipulation*. The definition of a causal effect is the difference between two potential outcomes. If you only have one outcome, then your model can not be causal. 
+
+In many circumstances, we don't really care if a model is causal or not. We might only want to forecast/predict/explain the outcome variable. In that case, whether we can interpret the influence of a variable as causal is irrelevant to our use of that variable.
+
+### Courage
+
+Fitting a logistic model is easy. We use all the same arguments as usual, but with `family = binomial` added.
+
+```{r}
+fit_4 <- stan_glm(data = ch8,
                   formula = liberal ~ income,
                   family = binomial,
                   refresh = 0,
                   seed = 365)
+```
 
-print(fit_4, digits = 3)
+Having fit the model, we can look at a printed summary. Note the use of the `digits` argument to display more digits in the printout.
+
+```{r}
+print(fit_4, digits = 6)
+```
+
+Fitted models tell us about the posterior distributions for the parameters in the formula which defines the model we have estimated. *We are assuming that the model is true.* And, as discussed in Chapter \@ref(one-parameter), that assumption is always false! Our model is never a perfectly accurate representation of reality. But, if it were perfect, then the posterior distributions which we have created for $\beta_0$, $\beta_1$, and so on would be perfect as well.
+
+When working with a linear model, we will often interpret the meaning of the parameters, as we have already done in the first three sections of this chapter. Such interpretations are much harder with logistic models because the math is much less convenient. So, we won't even bother to try to understand the meaning of these parameters. However, we can note that $\beta_1$ is negative, suggesting that people with higher incomes are less likely to be liberal.
+
+
+### Temperance
+
+*Among all people who have an income $100,000, what proportion are liberal?*
+
+Although our model is now logistic, all the steps in answering a question like this are the same as with a linear/guassian model.
+
+```{r}
+newobs <- tibble(income = 100000)
+
+pe <- posterior_epred(fit_4, 
+                      newdata = newobs) %>% 
+  as_tibble()
+```
+
+`pe` is a tibble with a single vector. That vector is 4,000 draws from the posterior distribution of proportion of people, among those who make $100,000, who are liberal. The population proportion is the same thing as the probability for any single individual.
+
+```{r}
+pe %>% 
+  ggplot(aes(x = `1`)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))),
+                   bins = 100)  +
+    labs(title = "Posterior for Proportion Liberal Among $100,000 Earners",
+         subtitle = "The population proportion is the same as the probability for any individual",
+         x = "Income",
+         y = "Probability of Being Liberal") +
+    scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    theme_classic()
 ```
 
 
+*Assume we have a group of eight people, two of whom make $100,000, two $200,000, two $300,000 and two $400,000. How many will be liberal?*
 
+Because we are trying to predict the outcome for a small number of units, we use `posterior_predict()`. The more complex the questions we ask, the more care we need to devote to making the `newobs` tibble. We use the same `rowwise()` and `c_across()` tricks as earlier in the chapter.
+
+```{r}
+newobs <- tibble(income = c(rep(100000, 2),
+                            rep(200000, 2),
+                            rep(300000, 2),
+                            rep(400000, 2)))
+                 
+
+pp <- posterior_predict(fit_4, 
+                        newdata = newobs) %>% 
+  as_tibble() %>% 
+  mutate_all(as.numeric) %>% 
+  rowwise() %>% 
+  mutate(total = sum(c_across()))
+
+pp
+```
+
+Study the `pp` tibble. Understand its component parts. The first column, for example, is 4,000 draws from the posterior distribution for the liberal status of a random person with an income of $100,000. Note how all the draws are zeroes or ones. That is very different from the draws we have seen before! But it also makes sense. We are making a prediction about a binary variable, a variable which only have two possible values: zero or one. So, any (reasonable!) predictions will only be zero or one.
+
+The second column is the same thing as the first column. Both are 4,000 draws from the posterior distribution for the liberal status of a random person with an income of $100,000. Yet they also have different values. They are both the same thing and different things, in the same way that `rnorm(10)` and `rnorm(10)` are the same thing --- both are 10 draws from the standard normal distribution --- and different things in that the values vary.
+
+The third and fourth columns are different from the first two columns. They are both 4,000 draws from the posterior distribution for the liberal status of a random person with an income of $200,000. And so on for later columns. We can answer very difficult questions by putting together simple building blocks, each of them a set of draws from a posterior distribution. Recall the discussion in Section \@ref(distributions).
+
+The `total` column is simply the sum of the first eight columns. Having created the building blocks with 8 columns of draws from four different posterior distributions, we can switch our focus to each row. Consider row 2. It has a vector of 8 numbers: `1 1 1 0 0 1 0 0`. We can treat that vector as a unit of analysis. This is what might happen with our 8 people. The first three might be liberal, the fourth not liberal and so on. This row is just one example of what might happen, one draw from the posterior distribution of possible outcomes for groups of eight people with these incomes.
+
+We can simplify this draw by taking the sum, or doing anything else which might answer the question with which we are confronted. Posterior distributions are as flexible as individual numbers. We can, more or less, just use algebra to work with them. 
+
+Graphically we have:
+
+
+```{r}
+pp %>% 
+  ggplot(aes(x = total)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))),
+                   bins = 100)  +
+    labs(title = "Posterior for Number of Liberals in Group with Varied Incomes",
+         subtitle = "Two is the most likely number, but values from 0 to 5 are plausible",
+         x = "Number of Liberals",
+         y = "Probability") +
+    scale_x_continuous(labels = scales::number_format(accuracy = 1)) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    theme_classic()
+```
+
+As always, there is some *truth*. If, tomorrow, we were to meet 8 new people, with the specified incomes, a certain number of them would be liberal. If we had the ideal Preceptor Table, we could just look up that number. No data science required. Alas, we don't know the truth. The bets we can do is to create a posterior distribution for that unknown value, as we have done here. We then need to translate that posterior into English --- "The most likely number of liberals is 2 or 3, but a total as low as zero or as high as 5 is also plausible. Having 6 liberals would be really surprising. Having 7 or 8 is almost impossible."
+
+Are these two posterior probability distributions perfect? No! This is the central message of the virtue of Temperance. We must demonstrate our humility when we use our models. Recall the distinction between the *unknown true distribution* and the *estimated distribution*. The first is the posterior distribution we would create of we understood every detail of the process and could accurately model it. We would still not know the true unknown number, but our posterior distribution for that number would be perfect. Yet, our model is never perfect. We are making all sorts of assumptions behind the scenes. Some of those assumptions are plausible. Others are less so. Either way, the *estimated distribution* is what we have graphed above. 
+
+The central lesson of Temperance is: Don't confuse the *estimated* posterior (which is what you have) with the *true* posterior (which is what you want). Recognize the unavoidable imperfections in the process. You can still use your estimated posterior --- what choice do you have? --- but be cautious and humble in doing so. The more that you suspect that your estimated posterior differs from the true posterior, the more humble and cautious you should be.
 
 ## Summary
 
@@ -959,7 +1084,7 @@ Similar to previous chapters, our first task is to use *Wisdom* . We judge how r
 
 * Use `posterior_epred()` to estimate expected values. The **e** in **e**pred stands for **e**xpected.
 
-* Use `posterior_predict()` to make forecasts for individuals. The variable in predictions is always greater than the variability in expectations because predictions can't pretend than $\epsilon_i$ is always zero.
+* Use `posterior_predict()` to make forecasts for individuals. The variable in predictions is always greater than the variability in expectations because predictions can't pretend that $\epsilon_i$ is zero.
 
 Once we have draws from a posterior distribution for our outcome variable --- whether that be an expectation or a prediction --- we can manipulate those draws to answer our question. 
 
@@ -972,4 +1097,7 @@ Once we have draws from a posterior distribution for our outcome variable --- wh
 * *Predictive models and causal models use the same math and the same code.*
 
 * *"When comparing" is a great phrase to start the summary of any non-causal model.*
+
+* *Don't confuse the estimated posterior (which is what you have) with the true posterior (which is what you want). Be humble and cautious in your use of the posterior.*
+
 

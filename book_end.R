@@ -6,3 +6,5 @@
 # remember not to check in a new version of bib/packages.bib.
 
 knitr::write_bib(c(.packages(), "bookdown"), "bib/packages.bib")
+
+lifecycle::last_warnings()

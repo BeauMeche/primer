@@ -39,19 +39,12 @@ bib/packages.bib
 
 !docs/*
 
-# Delete the below next time I edit this file. Does not seem necessary.
+# Need to think more clearly about how to handle big data. For now, I 
+# just ignore them.
 
-# I get annoyed at checking in a libs/ folder everywhere, but maybe we should
-# check them in? If you don't, then, unless you have build the html
-# file for a chapter yourself, it won't show up nicely when you open it.
+IPUMS/extracts/*/*dat
 
-# **/*libs
 
-# I don't think that it matters that these files are not pushed for each chapter.
-# Might need to revisit this if we start cache'ing results so that the book builds faster.
 
-# **/*_files/
 
-# **/*log
-# **/*tex
-# **/rsconnect
+

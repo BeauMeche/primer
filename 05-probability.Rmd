@@ -1,32 +1,26 @@
 # Probability {#probability}
 
-<!-- Here, or earlier, need to explain discrete versus continuous distributions. -->
+<!-- Explain map_* functions. -->
 
-<!-- Add 3D distribution for Two Models case. Old picture is wrong because of change in percentages. Need regular plot at end as well. -->
+<!-- Prevent the rayshader images from popping up when Chapter 5 is knitted. -->
 
-<!-- Add 3D distribution for Three Models case? -->
 
-<!-- Consider plot the rayshaders live. Key command may be  rgl::rglwidget(). -->
+<!-- Consider the parallel structure of the 2-model, 3-model, and n-model case. First, we should always begin by discussing how to create the joint distribution of possible models and possible experimental results. This is done by, first, assuming that one of the models is true and then, second, show the variation in the world which results. That is, even if we know for a fact that you do not have the disease, there is still a chance that you test will come back positive. So, we should do that for one model. Then, we create the joint distribution by doing that same thing for all possible models. (We show all this code.) The joint distribution is a tibble which we are happy to look at. It always has two columns: the first is the possible models and the second is one possible result (which will vary) if that model is true. So, each possible model will have 1,000 (or at least 100) rows in the joint distribution. -->
 
-<!-- Need more of a parallel structure to 2 models, 3 models and N models. They should all be much more like each other. Three models is currently the best of them. Also, each needs to use the posterior distribution to forecast something. Structure for all three: Create joint distribution. Create conditional (unnormalized) distribution. Create posterior. Use posterior. Show code for all steps. -->
+<!-- Having create the joint distribution, we graph it in two dimensions. (We show the code for that.) Then, we graph it in three dimensions with rayshader. (Maybe there is a movie. Maybe we swoop in and fly around it.) Then, we take a "slice" of that joint distribution via rayshader. Move that slice around. Et cetera. Not sure how to do all that . . . Note that you can make rayshader objects interactive with rgl::rglwidget(). The ggral (sp?) package might also be useful. -->
 
-<!-- Greek letters or for parameters which we can never observe. Latin letters are for observables. -->
+<!-- After rayshader, we then use the joint distribution to make two graphics, showing the posterior distribution for the model. The first is unnormalized and the second is normalized. In both cases, we begin with the joint distribution --- an object we have saved --- and then use filter to get our slice. -->
 
+<!-- Should each section also do something with the resulting posterior? Use it to answer a question. Yes! Again, the N Model example is currently the best example. -->
+
+
+<!-- Maybe add, after N models, a section on Infinity models, meaning a continuous parameter p. Note that we have a continuous distribution section now. No reason to wait till Chapter 6 to dive into this. -->
 
 <!-- Also good to get into the *scaling* of distributions, and the arbitrariness thereof. For example, trains$age is a distribution. Fine. What about rep(trains$age, 2)? What about rep(trains$age, 100)? Well, if any vector is a distribution, then all three of these are distributions. In fact, they are the same distribution, just scaled differently.  -->
 
-<!-- We also have the issue of continuous distributions.  -->
-
-
 <!-- Need more discussion about quintiles and area under the curve. -->
 
-
 <!-- When discussing a parameter $p$ and a probability distribution p() in the absence of a specific context, then those simple terms are OK. But, whenever you are talking about specific parameters or specific probability distributions, you should have either subscripts or items in the parentheses, respectively.  -->
-
-<!-- More animations. Create a movie which swoops into the joint distribution, takes a slice, remove the other slices, and then normalizes. Cool new package ggral (sp?) -->
-
-
-<!-- We need a single example of a continuous distribution after Electoral Votes. It will also have math. And empirical. And posterior. Maybe $p$ as a continuous proportion?  -->
 
 <!-- Revisit these references and see if there is other stuff we should include:   -->
 
@@ -35,20 +29,124 @@
 <!-- Bayesian Workshop -->
 
 
-
-```{r include=FALSE}
-# Sort of awkward that we need the tidyverse to run the code below but we don't
-# explicitly load it up where the students can see us do it.
-
-library(tidyverse)
-```
-
-&nbsp;
-
 > The usual touchstone of whether what someone asserts is mere persuasion or at least a subjective conviction, i.e., firm belief, is betting. Often someone pronounces his propositions with such confident and inflexible defiance that he seems to have entirely laid aside all concern for error. A bet disconcerts him. Sometimes he reveals that he is persuaded enough for one ducat but not for ten. For he would happily bet one, but at ten he suddenly becomes aware of what he had not previously noticed, namely that it is quite possible that he has erred. -— Immanuel Kant, *Critique of Pure Reason*
 
 
 The central tension, and opportunity, in data science is the interplay between the *data* and the *science*, between our empirical observations and the models which we use to understand them. Probability is the language we use to explore that interplay; it connects models to data, and data to models.
+
+The only package we need in this chapter is **tidyverse**.
+
+```{r, message = FALSE}
+library(tidyverse)
+```
+
+```{r, echo = FALSE, message = FALSE}
+ # We also load the **rayshader** and **rgl** packages. We use them to create
+ # the 3-D plots below. You can read more about **rayshader**
+ # [here](https://www.rayshader.com/) but we will not be explaining how to use
+ # it in this *Primer*.
+
+library(rayshader)
+library(rgl)
+```
+
+## List-columns and map functions
+
+Before learning about probability, we need to expand our collection of R tricks by understanding list-columns and `map_*` functions. Recall that a list is different from an atomic vector. In atomic vectors, each element of the vector has one value.  Lists, however, can contain vectors, and even more complex objects, as elements.
+
+```{r}
+x <- list(c(4, 16, 9), c("A", "Z"))
+x
+```
+
+`x` is a list with two elements. The first element is a numeric vector of length 3. The second element is a character vector of length 2. We use `[[]]` to extract specific elements.
+
+```{r}
+x[[1]]
+```
+
+There are a number of built-in R functions that output lists. For example, the ***ggplot*** objects you have been making store all of the plot information in lists. Any function that returns multiple values can be used to create a list output by wrapping that returned object with `list()`.
+
+```{r}
+x <- rnorm(10)
+
+# range() returns the min and max of the argument 
+
+tibble(col_1 = list(range(x))) 
+```
+
+Notice this is a 1-by-1 tibble with one observation, which is a list of one element. Voila! You have just created a **list-column**.
+
+*If a function returns multiple values as a vector, like `range()` does, you must use `list()` as a wrapper if you want to create a list-column.*
+
+A list column is a column of your data which is a [list](https://adv-r.hadley.nz/vectors-chap.html#lists) rather than an atomic vector.  As with stand-alone list objects, you can pipe to `str()` to examine the column.
+
+```{r}
+tibble(col_1 = list(range(x))) %>%
+  str()
+```
+
+
+We can use `map_*` functions to both create a list-column and then, much more importantly, work with that list-column afterwards. 
+
+```{r}
+tibble(col_1 = list(range(x))) %>%
+  mutate(col_2 = map_dbl(col_1, ~ sum(.))) %>% 
+  str()
+```
+
+`map_*` functions, like `map_dbl()` in this example, take two key arguments, `.x` (the data which will be acted on) and `.f` (the function which will act on this data). Here, `.x` is the data in `col_1`, which is a list-column. `.f` is the function `sum()`. However, we can not simply write `map_dbl(col_1, sum)`. Instead, each use of `map_*` functions requires the use of a tilde --- a `~` --- to indicate the start of the function and the use of a dot --- a `.` --- to specify where the data goes in the function.
+
+`map_*` functions are a family of functions, with the suffix specifying the type of the object to be returned. `map()` itself returns a list. `map_dbl()` returns a double. `map_int()` returns an integer. `map_chr()` returns a character, and so on.
+
+
+```{r}
+tibble(ID = 1) %>% 
+  mutate(col_1 = map(ID, ~range(rnorm(10)))) %>%
+  mutate(col_2 = map_dbl(col_1, ~ sum(.))) %>% 
+  mutate(col_3 = map_int(col_1, ~ length(.))) %>% 
+  mutate(col_4 = map_chr(col_1, ~ sum(.))) %>% 
+  str()
+```
+
+Consider a more detailed example:
+
+
+```{r}
+# This simple example demonstrates the workflow which we will often follow.
+# Start by creating a tibble which will be used to store the results. (Or start
+# with a tibble which already exists and to which you will be adding more
+# columns.) It is often convenient to get all the code working with just a few
+# rows. Once it is working, we increase the number of rows to a thousand or
+# million or whatever we need.
+
+tibble(ID = 1:3) %>% 
+  
+  # The big convenience is being able to store a list in each row of the tibble.
+  # Note that we are not using the value of ID in the call to rnorm(). (That is
+  # why we don't have a "." anywhere.) But we are still using ID as a way of
+  # iterating through each row; ID is keeping count for us, in a sense.
+  
+  mutate(draws = map(ID, ~ rnorm(10))) %>% 
+  
+  # Each succeeding step of the pipe works with columns already in the tibble
+  # while, in general, adding more columns. The next step calculates the max
+  # value in each of the draw vectors. We use map_dbl() because we know that
+  # max() will returns a single number.
+  
+  mutate(max = map_dbl(draws, ~ max(.))) %>% 
+  
+  # We will often need to calculate more than one item from a given column like
+  # draws. For example, in addition to knowing the max value, we would like to
+  # know the range. Because the range is a vector, we need to store the result
+  # in a list column. map() does that for us automatically.
+  
+  mutate(min_max = map(draws, ~ range(.)))
+
+```
+
+This flexibility is only possible via the use of list-columns and  `map_*` functions. This workflow is extremely common. We start with an empty tibble, using ID to specify the number of rows. With that skeleton, each step of the pipe adds a new column, working off a column which already exists. 
+
 
 ## Probability distributions
 
@@ -73,16 +171,16 @@ This allows us to make the following statements:
 
 For the purposes of this *Primer*, a *probability distribution* is a mathematical object that covers a set of outcomes, where each distinct outcome has a chance of occurring between 0 and 1 inclusive. The chances must sum to 1. The set of possible outcomes --- heads or tails for the coin, 1 through 6 for a single die, 2 through 12 for a pair of dice --- can be either discrete or continuous. This set of outcomes is the *domain* of the probability distribution. There are three types of probability distributions: mathematical, empirical, and posterior. 
 
-The key difference between a distribution, as we have explored them in earlier chapters, and a *probability* distribution is the requirement that the sum of the probabilities of the individual outcomes must be exactly 1. There is no such requirement in a distribution. But any distribution can be turned into a probability distribution by "normalizing" it, as we will explore.  In this context, we will often refer to a distribution which is not (yet) a probability distribution as an "unnormalized" distribution.  
+The key difference between a distribution, as we have explored them Section \@ref(distributions), and a *probability* distribution is the requirement that the sum of the probabilities of the individual outcomes must be exactly 1. There is no such requirement in a distribution. But any distribution can be turned into a probability distribution by "normalizing" it, as we will explore.  In this context, we will often refer to a distribution which is not (yet) a probability distribution as an "unnormalized" distribution.  
 
-Pay attention to notation. Whenever we are talking about a specific probability (represented by a single value), we will use $\rho$ (the Greek letter "rho" but spoken aloud as "p" by us) with a *subscript* which specifies the exact outcome of which it is the probability. For instance, $\rho_h = 0.5$ denotes the probability of getting heads on a coin toss when the coin is fair. $\rho_t$ --- spoken as "PT" or "P sub T" or "P tails" --- denotes the probability of getting tails on a coin toss. However, when we are referring to the entire probability distribution over a set of outcomes, we will use $\text{Prob}()$. For example, the probability distribution of a coin toss is $\text{Prob}(\text{coin})$. That is, $\text{Prob}(\text{coin})$ is composed of the two specific probabilities (50% and 50%) mapped from the two values in the domain: Heads and Tails. Similarly, $\text{Prob}(\text{sum of two dice})$ is the probability distribution over the set of 11 outcomes (2 through 12) which are possible when you take the sum of two dice. $\text{Prob}(\text{sum of two dice})$ is made up of 11 numbers --- $\rho_2$,  $\rho_3$, ..., $\rho_{12}$ --- each representing the unknown probability that the sum will equal their value. That is, $\rho_2$ is the probability if rolling a 2.
+Pay attention to notation. Whenever we are talking about a specific probability (represented by a single value), we will use $\rho$ (the Greek letter "rho" but spoken aloud as "p" by us) with a *subscript* which specifies the exact outcome of which it is the probability. For instance, $\rho_h = 0.5$ denotes the probability of getting heads on a coin toss when the coin is fair. $\rho_t$ --- spoken as "PT" or "P sub T" or "P tails" --- denotes the probability of getting tails on a coin toss. However, when we are referring to the entire probability distribution over a set of outcomes, we will use $\text{Prob}()$. For example, the probability distribution of a coin toss is $\text{Prob}(\text{coin})$. That is, $\text{Prob}(\text{coin})$ is composed of the two specific probabilities (50% and 50%) mapped from the two values in the domain (Heads and Tails). Similarly, $\text{Prob}(\text{sum of two dice})$ is the probability distribution over the set of 11 outcomes (2 through 12) which are possible when you take the sum of two dice. $\text{Prob}(\text{sum of two dice})$ is made up of 11 numbers --- $\rho_2$,  $\rho_3$, ..., $\rho_{12}$ --- each representing the unknown probability that the sum will equal their value. That is, $\rho_2$ is the probability of rolling a 2.
 
-<!-- DK: Above is not clear. Explain this better by showing that a distribution is just a vector. A probability distribution is a vector in which each element of the vector is mapped to a 0--1 probability, the sum of which is one. Need to connect this more clearly to joint distribution discussion. -->
+<!-- DK: Above is not clear. Explain this better by showing that a distribution is just a vector. A probability distribution is a vector in which each element of the vector is mapped to a 0--1 probability, the sum of which is one. Need to connect this more clearly to joint distribution discussion. Update: This isn't quite right either. -->
 
 
 ### Flipping a coin
 
-A *mathematical distribution* is based on mathematical formulas. Assuming that the coin is perfectly fair, we should, on average, get heads as often as we get tails.
+A *mathematical distribution* is based on a mathematical formula. Assuming that the coin is perfectly fair, we should, on average, get heads as often as we get tails.
 
 ```{r, echo = FALSE}
 
@@ -111,42 +209,36 @@ An *empirical distribution* is based on data. You can think of this as the proba
 
 In this simulation, there are 56 heads and 44 tails. The outcome will vary every time we run the simulation, but the proportion of heads to tails should not be too different if this coin is fair.
 
-```{r, echo = FALSE}
-
-# Flipping one coin 100 times
+```{r}
+# We are flipping one fair coin a hundreds times. We need to get the same result
+# each time we create this graphic because we want the results to match the
+# description in the text. Using set.seed() guarantees that the random results
+# are the same each time. We define 0 as tails and 1 as heads.
 
 set.seed(3)
 
-coin <- c(0, 1)
-
-sims <- 100
-
-results <- sample(coin, sims, replace = TRUE)
-
-mydata <- tibble(results)
-
-ggplot(mydata, aes(x = results)) +
-  geom_histogram(aes(y = after_stat(count/sum(count))), 
-                 binwidth = 0.5, 
-                 color = "white") +
-  labs(title = "Empirical Probability Distribution",
-       subtitle = "Flipping one coin a hundred times",
-       x = "Outcome\nResult of Coin Flip",
-       y = "Probability") +
-  scale_x_continuous(breaks = c(0, 1), 
-                     labels = c("Heads", "Tails")) +
-  scale_y_continuous(labels = 
-                       scales::percent_format(accuracy = 1)) +
-  theme_classic()
-
+tibble(results = sample(c(0, 1), 100, replace = TRUE)) %>% 
+  ggplot(aes(x = results)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))), 
+                   binwidth = 0.5, 
+                   color = "white") +
+    labs(title = "Empirical Probability Distribution",
+         subtitle = "Flipping one coin a hundred times",
+         x = "Outcome\nResult of Coin Flip",
+         y = "Probability") +
+    scale_x_continuous(breaks = c(0, 1), 
+                       labels = c("Heads", "Tails")) +
+    scale_y_continuous(labels = 
+                         scales::percent_format(accuracy = 1)) +
+    theme_classic()
 ```
 
 
-A *posterior distribution* is based on beliefs and expectations. It displays your belief about things you can't see right now. You may have posterior distributions for events in the past, present, or future.
+A *posterior distribution* is based on beliefs and expectations. It displays your belief about things you can't see right now. You may have posterior distributions for outcomes in the past, present, or future.
 
 In the case of the coin toss, the posterior distribution changes depending on your beliefs. For instance, let's say your friend brought a coin to school and asked to bet you. If the result is heads, you have to pay them $5. 
 
-This makes you suspicious; your posterior distribution would reflect this. You might believe that $\rho_h$ is 0.95 and $\rho_t$ is 0.05.
+This makes you suspicious. Your posterior distribution would reflect this. You might believe that $\rho_h$ is 0.95 and $\rho_t$ is 0.05.
 
 ```{r, echo = FALSE}
 
@@ -172,6 +264,8 @@ ggplot(mydata, aes(x = results)) +
 ```
 
 The full terminology is mathematical (or empirical or posterior) *probability* distribution. But we will often shorten this to just mathematical (or empirical or posterior) distribution. The word "probability" is understood, even if it is not present.
+
+<!-- DK: Tie this more closely to the notion of distribution in chapter 2. In particular, recall the distinction between a distribution and draws from a distribution. -->
 
 
 ### Rolling two dice
@@ -199,30 +293,25 @@ tibble(sum = c(rep(c(2, 12), 1),
     theme_classic()
 ```
 
-We get an *empirical distribution* by running a simulation and rolling two dice a hundred times. The result is not identical to the mathematical distribution because of the inherent randomness of the real world. 
+We get an *empirical distribution* by rolling two dice a hundred times, either by hand or with a computer simulation. The result is not identical to the mathematical distribution because of the inherent randomness of the real world and/or of simulation. 
 
-```{r, echo = FALSE}
-
-# Two dice rolled 100 times
+```{r}
+# In the coin example, we create the vector ahead of time, and then assigned
+# that vector to a tibble. There was nothing wrong with that approach. And we
+# could do the same thing here. But the use of map_* functions is more powerful.
 
 set.seed(1)
 
-dice <- c(1:6)
-
-sims <- 100
-
-two_dice <- 
-  tibble(dice_1 = sample(dice, size = sims, replace = TRUE),
-         dice_2 = sample(dice, size = sims, replace = TRUE)) %>% 
-  mutate(sum = (dice_1 + dice_2))
-
-norm_2d <- two_dice %>% 
+emp_dist_dice <- tibble(ID = 1:100) %>% 
+  mutate(die_1 = map_dbl(ID, ~ sample(c(1:6), size = 1))) %>% 
+  mutate(die_2 = map_dbl(ID, ~ sample(c(1:6), size = 1))) %>% 
+  mutate(sum = die_1 + die_2) %>% 
   ggplot(aes(x = sum)) +
     geom_histogram(aes(y = after_stat(count/sum(count))), 
                    binwidth = 1, 
                    color = "white") +
     labs(title = "Empirical Probability Distribution",
-         subtitle = "Sum from rolling two dice one hundred times",
+         subtitle = "Sum from rolling two dice, replicated one hundred times",
          x = "Outcome\nSum of Two Die",
          y = "Probability") +
     scale_x_continuous(breaks = seq(2, 12, 1), labels = 2:12) +
@@ -230,13 +319,13 @@ norm_2d <- two_dice %>%
                          scales::percent_format(accuracy = 1)) +
     theme_classic()
 
-norm_2d
+emp_dist_dice
 ```
 
 We might consider labeling the y-axis in plots of empirical distributions as "Proportion" rather than "Probability" since it is an actual proportion, calculated from real (or simulated) data. We will keep it as "Probability" since we want to emphasize the parallels between mathematical, empirical and posterior probability distributions.
 
 
-The *posterior distribution* for rolling two dice a hundred times depends on your expectations. If you take the dice from your Monopoly set, you have reason to believe that the assumptions underlying the mathematical distribution are true. However, if you walk into a crooked casino and a host asks you to play craps, you might be suspicious. In craps, a come-out roll of 7 and 11 is a "natural," resulting in a win for the "shooter" and a loss for the casino. You might expect those numbers to occur less often than they would with fair dice. Meanwhile, a come-out roll of 2, 3 or 12 is a loss for the shooter. You might also expect values like 2, 3 and 12 to occur more frequently. Your posterior distribution might look like this:
+The *posterior distribution* for rolling two dice a hundred times depends on your beliefs. If you take the dice from your Monopoly set, you have reason to believe that the assumptions underlying the mathematical distribution are true. However, if you walk into a crooked casino and a host asks you to play craps, you might be suspicious. In craps, a come-out roll of 7 and 11 is a "natural," resulting in a win for the "shooter" and a loss for the casino. You might expect those numbers to occur less often than they would with fair dice. Meanwhile, a come-out roll of 2, 3 or 12 is a loss for the shooter. You might also expect values like 2, 3 and 12 to occur more frequently. Your posterior distribution might look like this:
 
 ```{r, echo = FALSE}
 # Hard code our posterior about the crooked casino.
@@ -382,12 +471,53 @@ There are many political science questions you could explore with posterior dist
 * Present: What are the total campaign donations from Harvard faculty?
 * Future: How many electoral votes will the Democratic candidate for president win in 2024?
 
+
+### Continuous distributions
+
+<!-- DK: More details? -->
+
+The three examples above are all *discrete* probability distributions, meaning that the outcome variable can only take on a limited set of values. A coin flip has two outcomes. The sum of a pair of dice has 11 outcomes. The total electoral votes for the Democratic candidate has 539 possible outcomes. In the limit, we can also create *continuous* probability distributions which have an *infinite* number of possible outcomes. For example, the average height for an American male could be any real number between 0 inches and 100 inches. (Of course, an average value anywhere near 0 or 100 is absurd. The point is that the average could be 68.564, 68.5643, 68.56432 68.564327, or any real number.)
+
+<!-- DK: Change this example to heights, something that is truly continuous. -->
+
+All the characteristics for discrete probability distributions which we reviewed above apply just as much to continuous probability distributions. For example, we can create mathematical, empirical and posterior probability distributions for continuous outcomes just as we did for discrete outcomes. For example, a posterior probability distribution for $p$, the percentage of US citizens who approve of Biden, might look like:
+
+
+```{r, echo = FALSE}
+tibble(p = rbeta(1000000, 200, 180)) %>% 
+  ggplot(aes(x = p)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))), 
+                   bins = 500) +
+    labs(title = "Posterior Probability Distribution",
+         subtitle = "Percentage of Americans who approve of President Biden",
+         x = "Outcome\nPresidential Approval",
+         y = "Probability") +
+    scale_y_continuous(labels = 
+                         scales::percent_format()) +
+    theme_classic()
+```
+
+Comments:
+
+<!-- DK: Need X Files poster -->
+
+* *The truth is out there.* If we asked all 300+ million Americans whether or not they approve of President Biden, we could know $p$ exactly. Alas, we can't do that. We use a posterior probability distribution to summarize are beliefs about the true value of $p$, a truth we can never confirm.
+
+* *Continuous variables are a myth.* Nothing that can be represented on a computer is [truly continuous](https://cs.stackexchange.com/questions/71648/why-is-data-in-computer-science-considered-to-be-discrete). Even something which appears continuous, like $p$, actually can only take on a (very large) set of discrete variables. In this case, there are approximately 300 million possible true values of $p$, one for each total number of people who approve of President Biden.
+
+* The math of continuous probability distributions can be tricky. Read [a book](https://drive.google.com/file/d/1VmkAAGOYCTORq1wxSQqy255qLJjTNvBI/view) on  mathematical probability for all the messy details. Little of that matters in applied work.
+
+* The most important difference is that, with discrete distributions, it makes sense to estimate the probability of a specific outcome. What is the probability of rolling a 9? With continuous distributions, this makes no sense because there are an infinite number of possible outcomes. *With continuous variables, we only estimate intervals.* What is the probability that Biden's true approval percentage is between 50% and 55%? 
+
+Don't worry about the distinctions between discrete and continuous outcomes, or between the discrete and continuous probability distributions which we will use to summarize our beliefs about those outcomes. The basic intuition is the same in both cases.
+
+
 ### Working with probability distributions
 
 
 <!-- DK: Does this really belong here? Maybe at the end? -->
 
-```{r, echo = FALSE, fig.cap = 'Bruno de Finetti, an Italian statistician who wrote a famous treatise on the theory of probability that began with the statement "PROBABILITY DOES NOT EXIST." This is because probability only exists subjectively in our minds.'}
+```{r, echo = FALSE, out.width="60%", fig.align='center', fig.cap = 'Bruno de Finetti, an Italian statistician who wrote a famous treatise on the theory of probability that began with the statement "PROBABILITY DOES NOT EXIST." This is because probability only exists subjectively in our minds.'}
 
 knitr::include_graphics("05-probability/images/de_finetti.jpg")
 
@@ -396,10 +526,24 @@ knitr::include_graphics("05-probability/images/de_finetti.jpg")
 A probability distribution is not always easy to work with. It is a complex object. And, in many contexts, we don't really care about all that complexity. So, instead of providing the full probability distribution, we often just use a summary measure, a number or two or three which captures those aspects of the entire distribution which are relevant to the matter at hand. Let's explore these issues using the 538 posterior probability distribution, as of August 13, 2020, for the number of electoral votes which will be won by Joe Biden. Here is a tibble with 1,000,000 draws from that distribution:
 
 
-```{r, message = FALSE, echo = FALSE}
+```{r, echo = FALSE}
 # DK: This code is a mess! Please fix!
 
-z <- read_csv("https://raw.githubusercontent.com/PPBDS/primer/master/05-probability/data/election-forecasts-2020/prez_1.csv") %>%
+z <- read_csv("https://raw.githubusercontent.com/PPBDS/primer/master/05-probability/data/election-forecasts-2020/prez_1.csv", 
+              col_types = cols(cycle = col_double(),
+                               branch = col_character(),
+                               model = col_character(),
+                               modeldate = col_character(),
+                               candidate_inc = col_character(),
+                               candidate_chal = col_character(),
+                               candidate_3rd = col_logical(),
+                               evprob_inc = col_double(),
+                               evprob_chal = col_double(),
+                               evprob_3rd = col_logical(),
+                               total_ev = col_double(),
+                               timestamp = col_character(),
+                               simulations = col_double()
+                               )) %>%
        select(evprob_chal, total_ev)  %>% 
        rename(prob = evprob_chal, electoral_votes = total_ev) %>% 
        mutate(obs = round(prob * 1000000))  %>% 
@@ -419,6 +563,8 @@ draws
 ```
 
 *A distribution and a sample of draws from that distribution are different things.* But, if you squint, they are sort of the same thing, at least for our purposes. For example, if you want to know the mean of the distribution, then the mean of the draws will be a fairly good estimate, especially if the number of draws is large enough.
+
+<!-- DK: Need more here. Connect to the discussion in Section 2.9 -->
 
 Recall from Chapter \@ref(wrangling) how we can draw randomly from specified probability distributions:
 
@@ -468,11 +614,15 @@ Remember that *probability distributions are mathematical objects that cover a s
 
 <!-- DK: Do we really need this?  -->
 
-For instance, we can generate the following unnormalized distribution for the sum of rolling two dice. 
+For instance, we can generate the following unnormalized distribution for the sum of rolling two dice. (This uses the same code as above, but without the normalization step.)
 
 ```{r, echo = FALSE}
+set.seed(1)
 
-emp_2d <- two_dice %>% 
+tibble(ID = 1:100) %>% 
+  mutate(die_1 = map_dbl(ID, ~ sample(c(1:6), size = 1))) %>% 
+  mutate(die_2 = map_dbl(ID, ~ sample(c(1:6), size = 1))) %>% 
+  mutate(sum = die_1 + die_2) %>% 
   ggplot(aes(x = sum)) +
     geom_histogram(binwidth = 1, color = "white") +
     labs(title = "Empirical Unnormalized Distribution",
@@ -481,14 +631,12 @@ emp_2d <- two_dice %>%
          y = "Count") +
     scale_x_continuous(breaks = seq(0, 12, 1), labels = 0:12) +
     theme_classic()
-
-emp_2d 
 ```
 
 Notice that the shape of the distribution is the same as the empirical probability distribution we generated earlier, except that the y-axis is labeled differently.
 
 ```{r, echo = FALSE}
-norm_2d
+emp_dist_dice
 ```
 
 
@@ -509,7 +657,53 @@ Joint distributions are also mathematical objects that cover a set of outcomes, 
 Let's say that you are rolling two six-sided dice simultaneously. Die 1 is weighted so that there is a 50% chance of rolling a 6 and a 10% chance of each of the other values. Die 2 is weighted so there is a 50% chance of rolling a 5 and a 10% chance of rolling each of the other values. Let's roll both dice 1,000 times. In previous examples involving two dice, we cared about the sum of results and not the outcomes of the first versus the second die of each simulation. With a joint distributions, the order matters; so instead of 11 possible outcomes on the x-axis of our distribution plot (ranging from 2 to 12), we have 36. Furthermore, a 2D probability distribution is not sufficient to represent all of the variables involved, so the joint distribution for this example is displayed using a 3D plot.
 
 ```{r, echo = FALSE}
-knitr::include_graphics("05-probability/images/joint.png")
+# DK: Revisit and clean up this code.
+
+# Step 1: Create and organize the data.
+
+mydata <- tibble(die.1 = sample(1:6, size = 1000, prob =
+                                  c(0.1,0.1,0.1,0.1,0.1,0.5), replace = TRUE),
+                 die.2 = sample(1:6, size = 1000, prob =
+                                  c(0.1,0.1,0.1,0.1,0.5,0.1), replace = TRUE)) %>%
+          group_by(die.1, die.2) %>%
+          summarize(total = n(),
+                    .groups = "drop")
+
+die1_factor <- as.factor(mydata$die.1)
+die2_factor <- as.factor(mydata$die.2)
+
+
+# Step 2: Create a ggplot object.
+
+mtplot <-  ggplot(mydata) +
+              geom_point(aes(x = die1_factor, y = die2_factor, color = total)) +
+              scale_color_continuous(limits = c(0,100)) +
+              labs(x = "Die 1", y = "Die 2") +
+              theme(legend.position = "none")
+
+
+# Step 3: Turn it into a 3D plot. This takes a bit of time and
+# will open an interactive "RGL Device" window with the plot.
+
+plot_gg(mtplot,
+        width = 3.5, # Plot width
+        zoom = 0.65, # How close view on plot should be (1=normal, <1=closer)
+        theta = 25, # From which direction to view plot (0-360°)
+        phi = 30, # How "steep" view on plot should be (0-90°)
+        sunangle = 225, # Angle of sunshine for shadows (0-360°)
+        soliddepth = -50, # Thickness of pane (always <0, the smaller the thicker)
+        windowsize = c(2048,1536)) # Resolution
+
+
+# Step 4: Embed plot in Rmd file.
+
+rglwidget()
+
+
+# Step 5: Close the "RGL Device" window by running this command. Do
+# this EVERY time before you try to create a new 3D plot.
+
+rgl.close()
 ```
 
 ## Tree diagrams
@@ -558,117 +752,195 @@ How would you express this in statistical notation? $\text{Prob}(A|B)$ is the sa
 
 ## Two models
 
+The simplest possible setting for inference involves two models --- meaning two possible states of the world --- and two outcomes from an experiment. Imagine that there is a disease --- *Probophobia*, an irrational fear of probability --- which you either have or don't have. We don't know if you have the diseases, but we do assume that there are only two possibilities. We also know that 1% of the people in the population suffer from Probophobia. Woe is them!
 
+We also have a test which is 95% accurate. This is our experiment, one with only two possible outcomes: positive and negative. 
+
+Question: *If you test positive, what is the probability that you have Probophobia?*
+
+More generally, we are estimating a *conditional probability*. Conditional on the outcome of a postive test, what is the probability that you have Probophobia? Mathematically, we want:
+
+$$ \text{Prob}(\text{Disease | Test = Postive} ) $$
+
+<!-- DK: Not sure if this math is correct. Use it? If so, use it for each model? -->
+
+To answer this question, we need to use the tools of joint and conditional probability that we have learned earlier in this Chapter. We begin by building, by hand, the joint distribution of the possible models (you have the Probophobia or you do not) and of the possible outcomes (you test positive or negative). Building the joint distribution involves *assuming* that each model is true and then creating the distribution of outcomes which might occur if that assumption is true. 
+
+For example, assume you have Probophobia. There is then a 95% chance that you test positive and a 5% chance you test negative. Similarly, if we assume that the second model is true --- that you don't have Probophobia --- then there is 5% chance you test positive and a 95% you chance negative. Of course, for you (or any individual) we do not know for sure what is happening. We do not know if you have the disease. We do not know what your test will show. But we can use these relationships to construct the joint distribution.
+
+<!-- DK: Above is a a bit awkward. Not sure that the below works. It certainly needs to be explained! Could also do this with n = 10000 and then unnest(). Would that be clearer? -->
 
 ```{r, echo = FALSE}
-# Could create prevalence and accuracy variables as well. But not today!
-
-city_pop <- 100000
-has_disease <- 0.01 * city_pop
-
-test_positive_true <- 0.95 * has_disease
-test_negative_false <- 0.05 * has_disease
-
-test_positive_false <- (city_pop - has_disease) * 0.05  
-test_negative_true <- (city_pop - has_disease) * 0.95  
-
-# Is there an easier way of keep track of all these numbers? I build this object
-# by first determining all the people that have the disease and those that
-# don't. Then, within each category, determine who tests positive and who tests
-# negative. Fortunately, I have figured out all those totals already. And I do
-# an error check.
-
-# DK: Why does a black dot appear in the middle of the squares?
-
-# stopifnot(test_positive_true + 
-#             test_negative_false == has_disease)
-# stopifnot(test_negative_true + 
-#             test_positive_false == city_pop - has_disease)
-
-pop <- tibble(patient_id = 1:100000, 
-              have_disease = c(rep(1, has_disease),
-                               rep(0, city_pop - has_disease)),         
-              positive_test = c(rep(1, test_positive_true),
-                                rep(0, test_negative_false),
-                                rep(0, test_negative_true),
-                                rep(1, test_positive_false)))
+set.seed(9)
 ```
 
 
-You are in a city of `r scales::comma(city_pop)` people. It is true that exactly 1% of the population has a disease, but we don't know which people have it and which do not. In terms of a count, that means 
-`r scales::comma(has_disease)` people have this disease of the 
-`r scales::comma(city_pop)` in the population.  We have a test which is 95% accurate. That is, if you have the disease there is a 95% chance that the test reports that you do, and the same if you don't have the disease.
+```{r}
+# It is often handy to bring out a key parameter rather than searching for it in
+# the code every time you want to change it. When testing this code, we would
+# set `sims` to a number like 3, just to make sure everything is working.
 
-So, of the `r scales::comma(has_disease)` people who truly do have the disease --- where `r scales::comma(has_disease)` is 1% of the 
-`r scales::comma(city_pop)` people in the city ---  `r scales::comma(test_positive_true)` would correctly test positive and `r scales::comma(test_negative_false)` would incorrectly test negative. The city also has `r scales::comma(city_pop - has_disease)` people who do not have the disease,  
-`r scales::comma(test_positive_false)` of which incorrectly test positive and `r scales::comma(test_negative_true)` of which correctly test negative. That means that the number of people who would test positive for the disease is `r scales::comma(test_positive_true)` plus  `r scales::comma(test_positive_false)`, which equals 
-`r scales::comma(test_positive_true + test_positive_false)` but 
-*only `r scales::comma(test_positive_true)` of them have the disease*. In simple terms, the probability of you having the disease *given a positive test result* is much lower than the stated 95% accuracy of the test.
+sims <- 100000
 
-Here is the joint empirical distribution of the test result and disease status. Note that this is an unnormalized distribution because each dot represents a person in this city.
+# Pipes generally start with tibbles, so we start with a tibble which just
+# includes an ID variable. We don't really use ID. It is just handy for getting
+# organized. We call this object `jd_disease`, where the `jd` standds for
+# *j*oint *d*istribution.
 
-```{r, echo = FALSE}
+jd_disease <- tibble(ID = 1:sims) %>% 
+  
+  # For each ID, we (randomly!) determine whether or not the person has
+  # Probophobia. In the population, the rate is only 1%, thus explaining the
+  # `prob` value of 0.01. Note that the call to `rbinom()` does not use the
+  # value of the `ID` variable. 
+  
+  mutate(have_disease = map_int(ID, ~ rbinom(n = 1, 
+                                             size = 1, 
+                                             prob = 0.01))) %>% 
+  
+  # For each person, we (randomly!) decide whether or not their test comes back
+  # positive. The test is 95% accurate, explaining the use of 0.95 in
+  # `rbinom()`. Then the hackery begins! rbinom() returns 1 or 0, which
+  # `ifelse()` treats as TRUE or FALSE. For TRUE, `test_positive` is assigned
+  # the same value as `have_disease`, which is what we want. The test was
+  # accurate. This is the single `.`. But 5% of the time, rbinom() will return a
+  # 0, meaning FALSE, meaning that we assign the opposite value --- generated by
+  # `! .` --- of `have_disease`. The use of `map_int()` ensures that we get a 0
+  # or 1 as the return value.
+  
+  mutate(test_positive = map_int(have_disease,
+                                 ~ ifelse(rbinom(n = 1, 
+                                          size = 1, 
+                                          prob = 0.95),
+                                          .,
+                                          ! .)))
 
+jd_disease
+```
 
-ggplot(pop, aes(x = as.factor(positive_test), 
-                y = as.factor(have_disease))) +
+Most values for `have_diseases` are zero since 99% of the population does not suffer from Probophobia. Most of those will have a negative test result, meaning `test_positive = 0`. However, because the test is not perfect, some of those, like `ID = 8`,  will have a "false positive" result. Other individuals, like `ID = 10`, will have the diseases, and 95% of those will have a "true positive" result, as `10` does.
+
+Plot the joint distribution:
+
+```{r}
+jd_disease %>% 
+  ggplot(aes(x = as.factor(test_positive), 
+             y = as.factor(have_disease))) +
   geom_point() +
   geom_jitter(alpha = .2) +
-  theme_classic() +
-  labs(title = "Joint Unnormalized Empirical Distribution \n of Test Results and Disease Status",
-    x = "Test Result",
-    y = "Disease Status") +
+  labs(title = "Unnormalized Distribution of Test Results and Disease Status",
+       subtitle = "Rare diseases have many false positives",
+       x = "Test Result",
+       y = "Disease Status") +
   scale_x_discrete(breaks = c(0, 1), 
                    labels = c("Negative", "Positive")) +
   scale_y_discrete(breaks = c(0, 1), 
-                   labels = c("Negative", "Positive"))
+                   labels = c("Negative", "Positive")) +
+  theme_classic()
 
 ```
 
-Here is a joint distribution displayed in 3D. Instead of using the "jitter" feature in R to unstack the dots, we are using a 3D plot to visualize the number of dots in each box. The number of people who correctly test negative in this city is `r scales::comma(test_negative_true)`, far outnumbering any of the other categories. There are `r scales::comma(test_positive_false)` false positives, `r scales::comma(test_positive_true)` true positives, and only `r scales::comma(test_negative_false)` false negatives. This is why we can barely see the 3D bar coming from those combinations.
+Below is a joint distribution displayed in 3D. Instead of using the "jitter" feature in R to unstack the dots, we are using a 3D plot to visualize the number of dots in each box. The number of people who correctly test negative is far greater than of the other categories. There are far fewer false positives and true positives -- and only a handful of false negatives. This is why we can barely see the 3D bar coming from those combinations.
 
 ```{r, echo = FALSE}
-knitr::include_graphics("05-probability/images/rayshader_disease.png")
+
+jd_disease_plot <- jd_disease %>%
+  group_by(test_positive, have_disease) %>%
+  summarize(total = n(),
+            .groups = "drop") %>% 
+  ggplot(aes(x = as.factor(test_positive),
+             y = as.factor(have_disease),
+             color = total)) +
+    geom_point(size = 5) +
+    scale_x_discrete(breaks = c(0, 1),
+                     labels = c("Negative", "Positive")) +
+    scale_y_discrete(breaks = c(0, 1),
+                     labels = c("Negative", "Positive")) +
+    labs(x = "Test Result",
+         y = "Disease Status",
+         title = "Unnormalized Distribution of Results and Status",
+         subtitle = "Rare diseases have many false positives",
+         color = "Cases") +
+    theme_classic() +
+    theme(legend.position = "none",
+          title = element_text(size = 7),
+          axis.text.x = element_text(size = 7),
+          axis.text.y = element_text(size = 7))
+
+plot_gg(jd_disease_plot,
+        width = 3.5,
+        zoom = 0.65,
+        theta = 25,
+        phi = 30,
+        sunangle = 225,
+        soliddepth = -50,
+        windowsize = c(2048,1536))
+
+rglwidget()
+
+rgl.close()
 ```
 
-This section is called "Two Models" because, for each person, *there are two possible states of the world: have the disease or not have the disease.* By assumption, there are no other outcomes. We call these two possible states of the world "models," even though they are very simple models.
+<!-- DK: Insert the sliced rayshader distribution here, and discuss. Then, below, we do the same thing by hand. Then, use this text: -->
 
-In addition to the two models, we have two possible results of our experiment on a given person: test positive or test negative. Again, this is an assumption. We do not allow for any other outcome. In later sections, we will look at more complex situations where we consider more than two models and more than two possible results of the experiment. In the meantime, we have built the *unnormalized joint distribution for models and results*. This is a key point! Look back earlier in this chapter where we discussed both unnormalized distributions and joint distributions. 
+<!-- If we zoom in on the plot, FIX THIS people who tested positive have the disease and FIX THIS who tested positive do not have the disease. In this case, we are focusing on one slice of the probability distribution where the test result was positive. There are two disease outcomes: positive or negative. By isolating a section, we are looking at a conditional distribution. Conditional on a positive test, you can visualize the likelihood of actually having the disease versus not. -->
 
-Getting back to the figure, what is the difference between these distributions? How can they be useful in data analysis?
+This Section is called "Two Models" because, for each person, *there are two possible states of the world: have the disease or not have the disease.* By assumption, there are no other outcomes. We call these two possible states of the world "models," even though they are very simple models.
 
-We want to analyze these plots by looking at different slices. For instance, let's say that you have tested positive for the disease. Since the test is not always accurate, you cannot be 100% certain that you have it. We would isolate the slice where the test result equals 1 (meaning positive). If we zoom in on the plot, `r scales::comma(test_positive_true)` people who tested positive have the disease and `r scales::comma(test_positive_false)` who tested positive do not have the disease. In this case, we are focusing on one slice of the probability distribution where the test result was positive. There are two disease outcomes: positive or negative. By isolating a section, we are looking at a conditional distribution. Conditional on a positive test, you can visualize the likelihood of actually having the disease versus not.
+In addition to the two models, we have two possible results of our experiment on a given person: test positive or test negative. Again, this is an assumption. We do not allow for any other outcome. In coming sections, we will look at more complex situations where we consider more than two models and more than two possible results of the experiment. In the meantime, we have built the *unnormalized joint distribution for models and results*. This is a key point! Look back earlier in this Chapter for discussions about both unnormalized distributions and joint distributions. 
 
-<!-- This is what looks like when we take the slice where the test result is positive and zoom in. Taking a slice is the same thing as creating the conditional probability distribution. -->
+We want to analyze these plots by looking at different slices. For instance, let's say that you have tested positive for the disease. Since the test is not always accurate, you cannot be 100% certain that you have it. We isolate the slice where the test result equals 1 (meaning positive). 
 
-<!-- ```{r, echo = FALSE} -->
-<!-- knitr::include_graphics("05-probability/images/rayshader_disease_zoom.png") -->
-<!-- ``` -->
 
-<!-- We should rotate this slice and look at it from a 2D perspective. This looks very similar to what we saw at the beginning of the chapter when we flipped coins to create a probability distribution. -->
+```{r}
+jd_disease %>% 
+  filter(test_positive == 1)
+```
 
-<!-- ```{r, echo = FALSE} -->
+**Most people who test positive do not have the disease!** This is a common result for rare diseases. We can easily create an unnormalized conditional distribution with:
 
-<!-- mydata <- tibble(results = c(rep(0, 5), -->
-<!--                              rep(1, 5))) -->
+```{r}
+jd_disease %>% 
+  filter(test_positive == 1) %>% 
+  ggplot(aes(have_disease)) +
+    geom_bar() +
+    labs(title = "Disease Status Given Positive Test",
+         subtitle = "Rare diseases generates mostly false positives",
+         x = "Disease Status",
+         y = "Count") +
+    scale_x_continuous(breaks = c(0, 1),
+                       labels = c("Healthy", "Infected")) +
+  theme_classic()
+```
 
-<!-- ggplot(mydata, aes(x = results)) + -->
-<!--   geom_histogram(aes(y = after_stat(count/sum(count))),  -->
-<!--                  binwidth = 0.5,  -->
-<!--                  color = "white") + -->
-<!--   labs(title = "Conditional Probability Distribution", -->
-<!--        subtitle = "Probability of Having the Disease Given a Positive Test Result", -->
-<!--        x = "Disease Status", -->
-<!--        y = "Probability") + -->
-<!--   scale_x_continuous(breaks = c(0, 1),  -->
-<!--                      labels = c("Positive", "Negative")) + -->
-<!--   scale_y_continuous(labels =  -->
-<!--                        scales::percent_format(accuracy = 1)) + -->
-<!--   theme_classic() -->
+*`filter()` transforms a joint distribution into a conditional distribution.*
 
-<!-- ``` -->
+Turn this unnormalized distribution into a posterior probability distribution:
 
-This Stat 110 Animations video does a really good job of explaining a similar concept.
+
+```{r}
+jd_disease %>% 
+  filter(test_positive == 1) %>% 
+  ggplot(aes(have_disease)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))), 
+                   binwidth = 0.25, 
+                   color = "white") +
+    labs(title = "Posterior for Probophobia Conditional on Positive Test",
+         x = "Probophobia Status",
+         y = "Probability") +
+    scale_x_continuous(breaks = c(0, 1),
+                       labels = c("Healthy", "Infected")) +
+    scale_y_continuous(labels = 
+                         scales::percent_format(accuracy = 1)) +
+    theme_classic()  
+```
+
+Even with a positive test, you are more than 80% likely to be healthy.
+
+<!-- DK: Insert a use of this posterior? How many positive tests before you have at least 10 sick people? -->
+
+
+This Stat 110 Animations video does a really good job of explaining similar concepts.
 
 ```{r, echo = FALSE}
 knitr::include_app("https://www.youtube.com/embed/by3_weGwnMg")
@@ -692,24 +964,40 @@ Let's say you take a marble out of the bag, record whether it's black or white, 
 # one-by-one. in_bag takes three possible values: 0, 1 and 2, corresponding to
 # zero, one and two white marbles potentially in the bag.
 
-joint_dist <- tibble(in_bag = rep(c(0, 1, 2), 1000)) %>%
+sims <- 10000
+
+# We also start off with a tibble. It just makes things easier
+
+jd_marbles <- tibble(ID = 1:sims) %>% 
+  
+  # For each row, we (randomly!) determine the number of white marbles in the
+  # bag. We do not know why the `as.integer()` hack is necessary. Shouldn't
+  # `map_int()` automatically coerce the result of `sample()` into an integer?
+  
+  mutate(in_bag = map_int(ID, ~ as.integer(sample(c(0, 1, 2), 
+                                                  size = 1)))) %>%
+  
+  # Depending on the number of white marbles in the bag, we randomly draw out 0,
+  # 1, 2, or 3 white marbles in our experiment. We need `p = ./2` to transform
+  # the number of white marbles into the probability of drawing out a white
+  # marble in a single draw. That probability is either 0%, 50% or 100%.
+  
   mutate(in_sample = map_int(in_bag, ~ rbinom(n = 1, 
                                               size = 3, 
                                               p = ./2))) 
 
-joint_dist
+jd_marbles
 ```
 
 
 Plot the joint distribution:
 
-<!-- DK: More clean up. Work with in_bag and in_sample -->
-
 ```{r}
-# The distribution is unnormalized. All we see is the number of simulations in
-# each "bucket."
+# The distribution is unnormalized. All we see is the number of outcomes in each
+# "bucket." Although it is never stated clearly, we are assuming that there is
+# an equal likelihood of 0, 1 or 2 white marbles in the bag.
 
-joint_dist %>%
+jd_marbles %>%
   ggplot(aes(x = in_sample, y = in_bag)) +
     geom_jitter(alpha = 0.5) +
     labs(title = "Black and White Marbles",
@@ -724,14 +1012,44 @@ joint_dist %>%
 Here is the 3D visualization:
 
 ```{r, echo = FALSE}
-knitr::include_graphics("05-probability/images/three_models.png")
+jd_marbles_plot <- jd_marbles %>%
+  group_by(in_bag, in_sample) %>%
+  summarize(total = n(),
+            .groups = "drop") %>% 
+  mutate(in_sample = as.factor(in_sample)) %>% 
+  mutate(in_bag = as.factor(in_bag)) %>% 
+  ggplot(aes(in_bag, in_sample, color = total)) +
+    geom_point() +
+    scale_color_continuous() +
+    labs(x = "White Marbles Selected",
+         y = "White Marbles in the Bag",
+         title = "Black and White Marbles",
+         subtitle = "More white marbles in bag mean more are selected",
+         color = "Count") +
+    theme(legend.position = "none",
+          title = element_text(size = 7),
+    axis.text.x = element_text(size = 6),
+    axis.text.y = element_text(size = 6))
+
+plot_gg(jd_marbles_plot,
+        width = 3.5,
+        zoom = 0.65,
+        theta = 25,
+        phi = 30,
+        sunangle = 225,
+        soliddepth = -50,
+        windowsize = c(2048,1536))
+
+rglwidget()
+
+rgl.close()
 ```
 
 
 
-The y-axes of both the scatterplot and the 3D visualization are labeled "Number of White Marbles in the Bag." Each value on the y-axis is a model, a belief about the world. For instance, when the model is 0, we have no white marbles in the bag, meaning that none of the marbles we pull out in the sample will be white.
+The y-axes of both the scatterplot and the 3D visualization are labeled "Number of White Marbles in the Bag." *Each value on the y-axis is a model, a belief about the world.* For instance, when the model is 0, we have no white marbles in the bag, meaning that none of the marbles we pull out in the sample will be white.
 
-Let's say draw out three white marbles. We isolate the slice where the result of the simulation involves three white marbles and zero black ones. Here is the unnormalized probability distribution.
+Let's say we draw out three white marbles. We isolate the slice where the result of the simulation involves three white marbles and zero black ones. Here is the unnormalized probability distribution.
 
 ```{r}
 # The key step is the filter. Creating a conditional distribution from a joint
@@ -739,15 +1057,16 @@ Let's say draw out three white marbles. We isolate the slice where the result of
 # specific value. A conditional distribution is a "slice" of the joint
 # distribution, and we take that slice with filter().
 
-joint_dist %>% 
+jd_marbles %>% 
   filter(in_sample == 3) %>% 
   ggplot(aes(in_bag)) +
-    geom_histogram(binwidth = 0.25, color = "white") +
+    geom_histogram(binwidth = 0.5, color = "white") +
     labs(title = "Unnormalized Conditional Distribution",
          subtitle = "Number of white marbles in bag given that three were selected in the sample",
          x = "Number of White Marbles in the Bag",
          y = "Count") +
-    scale_x_continuous(breaks = seq(1, 2)) +
+    coord_cartesian(xlim = c(0, 2)) +
+    scale_x_continuous(breaks = c(0, 1, 2)) +
     theme_classic()
 
 ```
@@ -755,26 +1074,27 @@ joint_dist %>%
 Next, let's normalize the distribution.
 
 ```{r}
-joint_dist %>% 
+jd_marbles %>% 
   filter(in_sample == 3) %>% 
   ggplot(aes(in_bag)) +
     geom_histogram(aes(y = after_stat(count/sum(count))), 
-                   binwidth = 0.25, 
+                   binwidth = 0.5, 
                    color = "white") +
     labs(title = "Posterior Probability Distribution",
          subtitle = "Number of white marbles in bag given that three were selected in the sample",
          x = "Number of White Marbles in the Bag",
          y = "Probability") +
-    scale_x_continuous(breaks = c(1, 2)) +
+    coord_cartesian(xlim = c(0, 2)) +
+    scale_x_continuous(breaks = c(0, 1, 2)) +
     scale_y_continuous(labels = 
                          scales::percent_format(accuracy = 1)) +
     theme_classic()
 
 ```
 
-This plot makes sense because when all three marbles you draw out of the bag are  white, there is a pretty good chance that there are no black marbles in the bag. But you can't be certain! It is possible to draw three white even if the bag contains one white and one black. Yes, about 10%. However, it is impossible that there are no white marbles in the bag.
+This plot makes sense because when all three marbles you draw out of the bag are white, there is a pretty good chance that there are no black marbles in the bag. But you can't be certain! It is possible to draw three white even if the bag contains one white and one black. However, it is impossible that there are zero white marbles in the bag.
 
-<!-- DK: Maybe we should plot 0% over 0 white marbles. -->
+
 
 ## N models
 
@@ -836,10 +1156,10 @@ We can do the same thing for all 11 possible models, calculating what would happ
 
 set.seed(10)
 
-x <- tibble(p = rep(seq(0, 1, 0.1), 1000)) %>%
+jd_coin <- tibble(p = rep(seq(0, 1, 0.1), 1000)) %>%
   mutate(heads = map_int(p, ~ rbinom(n = 1, size = 20, p = .)))
 
-x %>%
+jd_coin %>%
   ggplot(aes(y = p, x = heads)) +
     geom_jitter(alpha = 0.1) +
     labs(title = "Empirical Distribution of Number of Heads",
@@ -854,7 +1174,36 @@ x %>%
 Here is the 3D version of the same plot.
 
 ```{r, echo = FALSE}
-knitr::include_graphics("05-probability/images/n_models.png")
+jd_coin_plot <- jd_coin %>% 
+  group_by(p, heads) %>%
+  summarize(total = n(), .groups = "drop") %>% 
+  mutate(p = as.factor(p)) %>% 
+  mutate(heads = as.factor(heads)) %>% 
+  ggplot() +
+    geom_point(aes(x = heads, y = p, color = total)) +
+    theme(legend.position = "none") +
+    labs(x = "Number of Heads out of 20 Tosses",
+         y = expression(rho[h]),
+         title = "Empirical Distribution of Number of Heads",
+         subtitle = expression(paste("Based on simulations with various values of ", 
+                                     rho[h]))) +
+    theme(title = element_text(size = 9),
+          axis.text.x = element_text(size = 7),
+          axis.title.y = element_text(size = 7),
+          legend.position = "none")
+
+plot_gg(jd_coin_plot,
+        width = 3.5,
+        zoom = 0.65,
+        theta = 25,
+        phi = 30,
+        sunangle = 225,
+        soliddepth = -50,
+        windowsize = c(2048,1536))
+
+rglwidget()
+
+rgl.close()
 ```
 
 In both of these diagrams, we see 11 models and 21 outcomes. We don't really care about the p($models$, $data$), the joint distribution of the models-which-might-be-true and the data-which-our-experiment-might-generate. Instead, we want to estimate $p$, the unknown parameter which determines the probability that this coin will come up heads when tossed. The joint distribution alone can't tell us that. We *created* the joint distribution before we had even conducted the experiment. It is our creation, a tool which we use to make inferences. Instead, we want the conditional distribution, p($models$ | $data = 8$). We have the results of the experiment. What do those results tell us about the probability distribution of $p$? 
@@ -864,7 +1213,95 @@ To answer this question, we simply take a vertical *slice* from the joint distri
 
 This animation shows what we want to do with joint distributions. We take a slice (the red one), isolate it, rotate it to look at the conditional distribution, normalize it (change the values along the current z-axis from counts to probabilities), then observe the resulting posterior.
 
+<!-- 
 
+TW: I tried to recreate the GIF below in rayshader, but failed. For those bold enough to try, the process 
+to create it would be as follows (problem described at the end):
+
+
+1. Create a dataframe with three columns: x, y and z. These will be the coordinates. 
+   Note that you need to cover every possible combination of x and y-values, and 
+   every such combination must have a z-value. Thus, the dataframe should have 
+   3 * [(#x-values)*(#values)] observations. Creating this by hand is a tedious process, 
+   but if you are using the same series of z-values over and over again, MS Excel might 
+   be helpful. 
+   If you want to save time, check out the file Values.xlsx in primer/05-probability. It
+   contains a dataframe I created, but it does not have the exact same dimensions as the plot 
+   in the GIF.
+   
+   
+2. Create a 2D plot like this and and save it as an object.
+    
+plot <-- ggplot(df, aes(x, y, color = z)) +
+          geom_point() +
+          theme(legend.position = "none")
+   
+   
+3. Turn it into a 3D plot. Use the following code. Only the first
+   argument is required, you may adjust the rest.
+
+plot_gg(plot,
+        width = 3.5,
+        zoom = 0.65,
+        theta = 25,
+        phi = 30,
+        sunangle = 225,
+        soliddepth = -50,
+        windowsize = c(2048,1536))
+
+
+4. If you installed xquartz, and window named "RGL Device" with the plot 
+   should have opened on your machine. Tilt the plot in the desired position.
+   Then, run this command to create a snapshot:
+   
+render_snapshot()
+
+   Congrats, you now have a single snapshot. However, keep in mind that in order to 
+   create a GIF, you need a series of snapshots that can be rendered into a GIF. This
+   means you will have to repeat the above process for every possible perspective/plot 
+   seen in below. And since the GIF consist of different plots, you must not only change
+   the perspective, but also the plot itself when creating all those snapshots. As I see it, 
+   there are four different plots that would need to be created:
+    
+    - "edge view" and all blue (initial view / one snapshot)
+    - "edge view" and one distribution red (one snapshot)
+    - "edge view" and all but red distribution flat (one snapshot) 
+    - shift to a frontal 2D-like perspective (many snapshots)
+   
+   The last step can (and should) be automated. This involves writing a loop that changes the 
+   view on the plot just a little bit, creates a snapshot, moves on to the next position, creates
+   another snapshot, and so on. This is not as hard as it seems, and a basic example of this can
+   be found here https://www.tylermw.com/a-step-by-step-guide-to-making-3d-maps-with-satellite-imagery-in-r/
+   (scroll down to the last image).
+   
+
+5. Once you have created all the snapshots the GIF will consist of, make sure their names reflect
+   the order in which they should be displayed. For example, "plot1.png", "plot2.png" and so on. If
+   you write the loop the right way, you may only have to rename the first three snapshots created 
+   manually. See the link above for details.
+   Finally, you can put it all together. First, run this command in R to close the "RGL Device" window:
+
+rgl::rgl.close()
+
+  Next, run this command in the TERMINAL. Make sure that you are in the right working directory and that 
+  you have ffmpeg installed. The third part defines the framerate per second, the example below uses 60. 
+  The fifth part must be named like your snapshots, followed by "%d.png". The last part is the name of the 
+  mp4 file, or the GIF, and can be named anything you like.
+
+system("ffmpeg -framerate 60 -i plot%d.png -pix_fmt yuv420p plot_gif.mp4")
+   
+   
+-----------------------
+   
+The Problem:
+
+I don't know how to create a 3D plot with rayshader and gpplot AND manually defined colors. Specifically, 
+I didn't manage to create the 3D plot with one red distribution surrounded by blue distributions. The issue 
+seems to be that rayshader uses the "color" aesthetic to make the z-axis. If you try to change the color of 
+a range of observations to red/blue, the z-values of these observations will be messed up.  
+
+
+-->
 
 ![](05-probability/animations/color_red_combo.gif)
 
@@ -873,8 +1310,7 @@ This is the only part of the joint distribution that we care about. We aren't in
 As we would expect, most of the time when 8 coin tosses came up heads, the value of $p$ was 0.4. But, on numerous occasions, it was not. It is quite common for a value of $p$ like 0.3 or 0.5 to generate 8 heads. Consider:
 
 ```{r, echo = FALSE}
-
-x %>% 
+jd_coin %>% 
   filter(heads == 8) %>% 
   ggplot(aes(p)) +
     geom_bar() +
@@ -888,7 +1324,7 @@ x %>%
 Yet this is a distribution of raw counts. It is an unnormalized density. To turn it into a proper probability density (i.e., one in which the sum of the probabilities across possible outcomes sums to one) we just divide everything by the total number of observations.
 
 ```{r, echo = FALSE}
-x %>% 
+jd_coin %>% 
   filter(heads == 8) %>% 
   ggplot(aes(x = p)) +
     geom_histogram(aes(y = after_stat(count/sum(count))),
@@ -944,7 +1380,7 @@ odds
 Third way is to sample from the actual distribution, which is a small dataset with just a few rows, but it includes both $\rho_h$ and the probability of each $\rho_h$. This also gives the correct answer.
 
 ```{r}
-p_posterior <- x %>% 
+p_posterior <- jd_coin %>% 
   filter(heads == 8) %>% 
   group_by(p) %>% 
   summarize(total = n(), .groups = "drop") %>%
@@ -980,10 +1416,16 @@ As you may have noticed, if you calculated the value using the first method, you
 
 ## Cardinal Virtues
 
-The four [Cardinal Virtues](https://en.wikipedia.org/wiki/Cardinal_virtues) are Wisdom, Justice, Courage, and Temperance. Because data science is, ultimately, a moral act, we use these virtues to guide our work. *Wisdom* highlights the importance of exploring your data. Given the questions you seek to answer, is the data valid? Is it representative? Is it ethical to proceed? *Justice* focuses on the Preceptor Table and the mathematical structure of the model. The virtue of *Courage* allows us to go from words and math to code, the hardest step in the data science process. *Temperance* guides us in the use of the model we have created to answer the questions we began with. We should be modest in the claims we make, and wary of naive attempts to "test" them.
+The four [Cardinal Virtues](https://en.wikipedia.org/wiki/Cardinal_virtues) are Wisdom, Justice, Courage, and Temperance. Because data science is, ultimately, a moral act, we use these virtues to guide our work.  
 
+* *Wisdom* begins with the ideal Preceptor Table. What data, if we had it, would allow us to answer our question easily? We explore the data we have. Are the data we have close enough to the data we want that we can consider all the data as coming from the same *population*? If not, we can't proceed further. 
 
-<!-- DK: THe below Not bad, but should be rewritten and tightened up. Delete the themes.Rmd when you are done. If it is worth remembering, it is worth including here. Highlight these two key connections: validity <==> columns and representativeness <==> rows. -->
+* *Justice* looks at the actual Preceptor Table, a structure which includes a row for every unit in the population -- the data we want to have and the data which we actually have. Is our data *representative* of the population? Is the meaning of the columns consistent, i.e., can we assume *validity*? We then make an assumption about the *data generating mechanism*. What general mathematical formula connects the outcome variable we are interested in with the other data that we have?
+
+* *Courage* allows us to explore different models. Even though Justice has provided the basic mathematical structure of the model, we still need to decide which variables to include and to estimate the values of unknown parameters. We avoid hypothesis tests. We check our models for consistency with the data we have. We select one model. 
+
+* *Temperance* guides us in the use of the model we have created to answer the questions we began with. We create posteriors of *quantities of interest*.  We should be modest in the claims we make. The posteriors we create are never the "truth." The assumptions we made to create the model are never perfect. Yet decisions made with flawed posteriors are almost always better than 
+
 
 ### Wisdom
 
@@ -992,63 +1434,11 @@ The four [Cardinal Virtues](https://en.wikipedia.org/wiki/Cardinal_virtues) are 
 knitr::include_graphics("other/images/Wisdom.jpg")
 ```
 
-Wisdom encompasses four topics: data, validity, , the population and ethics.
+Wisdom helps us decide if we can even hope to answer our question with the data we have.
 
-First, we look at the data and perform an exploratory data analysis, an EDA. You can never look at your data too much.
+First, start with the ideal Preceptor Table. What rows and columns of data do you need such that, if you had them all, the calculation of the number of interest would be trivial? If you want to know the average height of an adult in India, then the ideal Preceptor Table would include a row for each adult and a column for their height. With no missing data, the average is easy to determine, as would a wide variety of other *estimands*, other unknown numbers. 
 
-Second, confirm that the data we have accurately capturing the concepts we care about. @roas write:
-
-> Most important is that the data you are analyzing should map to the research question you are trying to answer. This sounds obvious but is often overlooked or ignored because it can be inconvenient. Optimally, this means that the outcome measure should accurately reflect the phenomenon of interest, the model should include all relevant predictors, and the model should generalize to the cases to which it will be applied.
-
-> For example, with regard to the outcome variable, a model of incomes will not necessarily tell you about patterns of total assets. A model of test scores will not necessarily tell you about child intelligence or cognitive development. ...
-
-> A sample that is representative of all mothers and children may not be the most appropriate for making inferences about mothers and children who participate in the Temporary Assistance for Needy Families program. ... Similarly, results regarding diet and exercise obtained from a study performed on patients at risk for heart disease may not be generally applicable to generally healthy individuals. 
-
-We want there to be a connection between the problem we face and the data we have. But desire is a poor replacement for substance. If the data we have is not relevant, then data science is useless.
-
-Third, a key concept is the "population," which is largely equivalent to the rows of the ideal Preceptor Table, as discussed in Chapter \@ref(rubin-causal-model). @roas write:
-
-<!-- DK: This is not bad, but needs to be re-written. -->
-
-> A regression model is fit to data and is used to make inferences about a larger population, hence the implicit assumption in interpreting regression coefficients is that the sample is representative of the population.
-
-> To be more precise, the key assumption is that the data are representative of the distribution of the outcome $y$ given the predictors $x_1$, $x_2$, ..., that are included in the model. For example, in a regression of earnings on height and sex, it would be acceptable for women and tall people to be overrepresented in the sample, compared to the general population, but problems would arise if the sample includes too many rich people. Selection on x does not interfere with inferences from the regression model, but selection on y does. This is one motivation to include more predictors in our regressions, to allow the assumption of representativeness, conditional on X, to be more reasonable.
-
-> Representativeness is a concern even with data that would not conventionally be considered as a sample. For example, the forecasting model in Section 7.1 contains data from 16 consecutive elections, and these are not a sample from anything, but one purpose of the model is to predict future elections. Using the regression fit to past data to predict the next election is mathematically equivalent to considering the observed data and the new outcome as a random sample from a hypothetical superpopulation. Or, to be more precise, it is like treating the errors as a random sample from the normal error distribution. For another example, if a regression model is fit to data from the 50 states, we are not interested in making predictions for a hypothetical 51st state, but you may well be interested in the hypothetical outcome in the 50 states in a future year. As long as some generalization is involved, ideas of statistical sampling arise, and we need to think about representativeness of the sample to the implicit or explicit population about which inferences will be drawn. This is related to the idea of generative modeling, as discussed in Section 4.1.
-
-Validity is about the columns in our tibble. Representativeness is about the rows.
-
-Fourth, even if we can make a model, we should always ask ourselves: Should we? Ethics matter.
-
-
-### Justice
-
-```{r, echo = FALSE, fig.cap = "Justice."}
-knitr::include_graphics("other/images/Justice.jpg")
-```
-
-There are three key aspects of *Justice*: the Preceptor Table, predictive versus causal models, and mathematical formula.
-
-
-#### Preceptor Table
-
-<!-- DK: Could have more here. -->
-
-Precision matters. What do you know and what do you want to know? Creating a Preceptor Table forces you to be clear about what you are trying to accomplish and the problems you will face along the way.
-
-**A Preceptor Table is a table with rows and columns for all the data that we have and would (reasonably) like to have.** If we had a Preceptor Table with no questions marks --- which we describe below as the ideal Preceptor Table --- we could calculate the number we want without the need for any inference.
-
-First, the infinite Preceptor Table is well described in Chapter \@ref(rubin-causal-model). We never use these, but it useful to understand them, and the assumptions we must make to work with something simpler. 
-
-Second, the ideal Preceptor Table is the Preceptor Table with no question marks, and with a reasonable number of rows and columns. Conceptually, this is the heart of the analysis. 
-
-Third, the actual Preceptor Table is the Preceptor Table with all the annoying question marks which the real world saddles us with. 
-
-The central problem in inference is to fill in the question marks on the actual Preceptor Table.
-
-Note that the concept of a Preceptor Table is more subtle than it at first appears. For example, consider a problem in which we are using `party` to predict `income` with the `trains` data. Naively, it might look like we don't have any question marks. For all 115 rows in the data, we have `party` and `income`. But the Preceptor Table we really need has more than 115 rows because we are trying to draw inferences about people not in the sample of 115. What if a new person shows up, tells us their party, and asks us to guess their income? The ideal Preceptor Table would include their row, with the data for `party` present but the data for `income` a question mark.
-
-#### Predictive versus causal models
+One key aspect of this ideal Preceptor Table is whether or not we need more than one potential outcome in order to calculate our estimand. For example, if we want to know the causal effect of exposure to Spanish-speakers on attitude toward immigration that we need a causal model, one which estimates that attitude under both treatment and control. The Preceptor Table would require two columns for the outcome. If, on the other hand, we only want to predict someone's attitude, or compare one person's attitide to another's, then we would only need a Preceptor Table with one column for the outcome. 
 
 Are we are modeling (just) for prediction or are we (also) modeling for causation? Predictive models care nothing about causation. Causal models are often also concerned with prediction, if only as a means of measuring the quality of the model. 
 
@@ -1060,27 +1450,61 @@ With causal inference, however, we can consider the case of Joe with $X = 5$ and
 
 *The difference between prediction models and causal models is that the former have one column for Y and the latter have more than one.* 
 
-A related issue is the different types of Preceptor Tables. All of these are Preceptor Tables, but it is useful, I think, to have a clear description of the different types. 
+Second, we look at the data we have and perform an exploratory data analysis, an EDA. You can never look at your data too much. The most important variable is the one we most want to understand/explain/predict/manipulate. In the models we create in later chapters. This variable will go on the lefthand side of our mathematical equations. Some academic fields refer to this as the "dependent variable." Others use terms like "regressor" or "outcome." Whatever the terminology, we need to explore the distribution of this variable, its min/max/range, its mean and median, its standard deviation.  
 
-#### Mathematical Model
+@roas write:
 
-*Justice* requires (simple) math. Consider a model of coin-tossing:
+> Most important is that the data you are analyzing should map to the research question you are trying to answer. This sounds obvious but is often overlooked or ignored because it can be inconvenient. Optimally, this means that the outcome measure should accurately reflect the phenomenon of interest, the model should include all relevant predictors, and the model should generalize to the cases to which it will be applied.
+
+> For example, with regard to the outcome variable, a model of incomes will not necessarily tell you about patterns of total assets. A model of test scores will not necessarily tell you about child intelligence or cognitive development. ...
+
+We care about other variables as well, especially those that are most correlated/connected with the outcome variable. The more time that we spend looking at these variables, the more likely we are to create a useful model.
+
+Third, a key concept is the "population." We need the data we want, the ideal Preceptor Table, and the data we have to be similar enough that we can consider them as all having come from the same statistical population. From [Wikipedia](https://en.wikipedia.org/wiki/Statistical_population):
+
+> In statistics, a population is a set of similar items or events which is of interest for some question or experiment. A statistical population can be a group of existing objects (e.g. the set of all stars within the Milky Way galaxy) or a hypothetical and potentially infinite group of objects conceived as a generalization from experience (e.g. the set of all possible hands in a game of poker).
+
+If we assume that the data we have is drawn from the same population as the data in the ideal Preceptor Table, then we can use information about the former to make inferences about the latter. We can combine the ideal Preceptor Table and the data into a single hypothetical data set. If we can't do that, if we can't assume that the two sources come from the same population, then we can't use our data to answer our questions. We have no choice but to walk away. The heart of Wisdom is knowing when to walk away. As John Tukey noted: 
+
+> The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data.
+
+### Justice
+
+```{r, echo = FALSE, fig.cap = "Justice."}
+knitr::include_graphics("other/images/Justice.jpg")
+```
+
+After Wisdom, we have an *actual Preceptor Table.* It includes rows for the data we have and the data we want to have. It has missing values, most importantly for potential outcomes which were not observed. The central problem in inference is to fill in the question marks in the actual Preceptor Table.
+
+There are three key aspects of *Justice*: the data generating mechanism, representativeness and validity.
+
+First, the *data generating mechanism* is the mathematical formula, and associated error term, which relates  our outcome variable to our covariates.  
+
+*Justice requires math.* Consider a model of coin-tossing:
 
 
-$$ T_i  \sim B(p_H, n = 20) $$
-The total number $T$ of Heads in experiment $i$ with 20 flips of a single coin, $T_i$, is distributed as a binomial with $n = 20$ and an unknown probability $\rho_h$ of the coin coming up Heads. 
+$$ H_i  \sim B(\rho_H, n = 20) $$
+The total number $H$ of Heads in experiment $i$ with 20 flips of a single coin, $H_i$, is distributed as a binomial with $n = 20$ and an unknown probability $\rho_h$ of the coin coming up Heads. 
  
- Note:
+Note:
 
-* This is a cheat and a simplification! We are Bayesians but we have not specified the full Bayesian machinery. We really need priors on the unknown parameter $\rho_h$ as well. But that is too complex for an introductory class, so we wave our hands, accept the default sesinvle parameters built into the functions we use and point readers to more advanced books, like @roas. 
+* This is a cheat and a simplification! We are Bayesians but we have not specified the full Bayesian machinery. We really need priors on the unknown parameter $\rho_h$ as well. But that is too complex for an introductory class, so we wave our hands, accept the default sensible parameters built into the R packages we use and point readers to more advanced books, like @roas. 
 
 * Defining $\rho_h$ as the "the probability that the coin comes up Heads" is a bit of a fudge. If you calculate that by hand and then compare it to what our tools produce, they won't be the same. Instead, the calculated value will be closer to zero. Why? $\rho_h$ is really the "long-run percentage of the time the coin comes up Heads." It is not just the percentage from this experiment. 
 
-<!-- DK: too complex for this chapter? -->
+<!-- DK: Unclear -->
 
 * In this simple case, we are fortunate that the parameter $\rho_h$ has such a (mostly!) simple analog to a real world quantity. Much of the time, parameters are not so easy to interpret. In a more complex model, especially with one with interaction terms, we focus less on parameters and more on actual predictions.
 
+* Wisdom allowed us to assume that all the rows in the actual Preceptor Table come from the same population. If that is true, then it is also true that the mathematical relationship between outcomes and covariates is consistent across these rows.
 
+Second, we should check how "representative" the data we have is of the entire population. 
+
+Third, confirm that the data we have accurately capturing the concepts we care about. Is the data *valid*, given the problem we are trying to solve? 
+
+
+
+*Validity is about the columns in our tibble. Representativeness is about the rows.*
 
 
 ### Courage
@@ -1089,8 +1513,11 @@ The total number $T$ of Heads in experiment $i$ with 20 flips of a single coin, 
 knitr::include_graphics("other/images/Courage.jpg")
 ```
 
-
 The three languages of data science are words, math and code, and the most important of these is code. We need to explain the structure of our model using all three languages, but we need *Courage* to implement the model in code.
+
+Courage requires us to take the general mathematical formula provide by Justice and then make it specific. Which variables should we include in the model and which do we exclude? Every data science project involves the creation of several models. For each, we specify the precise data generating mechanism. Using that formula, and some R code, we create a fitted model. All models have parameters. We can never know the true values of the parameters, but we can create, and explore, posterior distributions for those unknown true values.
+
+
 
 Code allows us to "fit" a model by estimating the values of the unknown parameters, like $\rho_h$. Sadly, we can never know the true values of these parameters. But, like all good data scientists, we can express our uncertain knowledge in the form of posterior probability distributions. With those distributions, we can compare the actual values of the outcome variable with the  "fitted" or "predicted" results of the model. We can examine the "residuals," the difference between the fitted and actual values.  
 
@@ -1102,9 +1529,11 @@ It doesn't matter what the outcome is. It could be the result of a coin flip, th
 
 Some of our uncertainty is driven by our ignorance about $\rho_h$. 
 
-A parameter is something which does not exist in the real world. (If it did, or could, then it would be data.) Instead, a parameter is a mental abstraction, a building block which we will use to to help us accomplish our true goal: To replace at least some of the questions marks in the Preceptor Table. Since parameters are mental abstractions, we will always be uncertain as to their value, however much data we might collect.
+A parameter is something which does not exist in the real world. (If it did, or could, then it would be data.) Instead, a parameter is a mental abstraction, a building block which we will use to to help us accomplish our true goal: To replace at least some of the questions marks in the actual Preceptor Table. Since parameters are mental abstractions, we will always be uncertain as to their value, however much data we might collect.
 
-But some, often most, of the uncertainty comes from forces that are, by assumption, not in the model. For example, if the coin is fair, we expect $T_i$ to equal 10. But, often, it will be different, even if we are correct and $\rho_h$ equals exactly 0.5. *Some randomness is intrinsic in this fallen world.* 
+But some, often most, of the uncertainty comes from forces that are, by assumption, not in the model. For example, if the coin is fair, we expect $T_i$ to equal 10. But, often, it will be different, even if we are correct and $\rho_h$ equals exactly 0.5. 
+
+*Some randomness is intrinsic in this fallen world.* 
 
 
 ### Temperance
@@ -1112,6 +1541,7 @@ But some, often most, of the uncertainty comes from forces that are, by assumpti
 ```{r, echo = FALSE, fig.cap = "Temperance."}
 knitr::include_graphics("other/images/Temperance.jpg")
 ```
+
 
 There are few more important concepts in statistics and data science than the "Data Generating Mechanism." Our *data* --- the data that we collect and see --- has been *generated* by the complexity and confusion of the world. God's own *mechanism* has brought His data to us. Our job is to build a model of that process, to create, on the computer, a mechanism which generates fake data consistent with the data which we see. With that DGM, we can answer any question which we might have. In particular, with the DGM, we provide predictions of data we have not seen and estimates of the uncertainty associated with those predictions. *Courage* helped us to create the DGM. *Temperance* will guide us in its use.
 
@@ -1136,6 +1566,12 @@ What does this mean? Well imagine a crowd playing Three Card Monte in the street
 
 We need patience in order to study and understand the unknown unknowns in our data. Patience is also important when we analyze the "realism" of our models. When we created the mathematical probability distribution for presidential elections, for instance, we assumed that the Democratic candidate would have a 50% chance of winning each vote in the electoral college. By comparing the mathematical model to our empirical cases, however, we recognize that the mathematical model is unlikely to be true. The mathematical model suggested that getting fewer than 100 votes is next to impossible, but many past Democratic candidates in the empirical distribution received less than 100 electoral votes.
 
+In Temperance, the key distinction is between the *true* posterior distribution --- what we will call "Preceptor's Posterior" --- and the estimated posterior distribution. Recall our discussion from Section \@ref(distributions). Imagine that every assumption we made in Wisdom and Justice were correct, that we correctly understand every aspect of how the world works. We still would not know the unknown value we are trying to estimate --- recall the Fundamental Problem of Causal Inference --- but the posterior we created would be perfect. That is Preceptor's Posterior. Sadly, even if our estimated posterior is, very close to Preceptor's Posterior, we can never be sure of that fact, because we can never know the truth, never be certain that all the assumptions we made are correct. 
+
+Even worse, we must always worry that our estimated posterior, despite all the work we put into creating it, is far from the truth. We, therefore, must be cautious in our use of that posterior, humble in our claims about its accuracy. Using our posterior, despite its fails, is better than not using it. Yet it is, as best, a distorted map of reality, a glass through which we must look darkly. Use your posterior with humility.
+
+
+
 <!-- DK: Could do more here. Show the iterative process of model building, including posterior predictive checks. -->
 
 <!-- Null hypothesis testing is a mistake. There is only the data, the models and the summaries therefrom. Describe an hypothesis test each chapter, and then dismiss it. Play the prediction game. That, perhaps, provides a useful framework for why NHST is stupid. Or, rather, you play the prediction game to figure out which statistical procedures are best --- and or, how well procedure X works --- and then use that information to make a decision. Explain what a test is, and why we think it is a waste of time to do them, and why people do them anyway. Key issue: If p = 0.04 really makes you do something totally different than p = 0.06, then either you (or the system within which you are operating) is stupid. -->
@@ -1144,6 +1580,8 @@ We need patience in order to study and understand the unknown unknowns in our da
 ## Summary
 
 <!-- DK: Not a bad summary, but should hit the key points more clearly.  -->
+
+*Validity is about the columns in our tibble. Representativeness is about the rows.*
 
 Throughout this chapter, we spent time going through examples of conditional distributions. However, it's worth noting that all probability distributions are conditional on something. Even in the most simple examples, when we were flipping a coin multiple times, we were assuming that the probability of getting heads versus tails did not change between tosses.
 

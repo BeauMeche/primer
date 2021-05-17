@@ -1,0 +1,166 @@
+# IPUMS {-}
+
+IPUMS, the Integrated Public Use Microdata Series, is a great source for big data. IPUMS includes the Current Population Survey (CPS) from the U.S. Census as well as other health and housing data. The IPUMS system allows you to create a subset of these massive repositories of collected data that fits your needs and interests. An initial word of caution to those new to the system is that your requests are not filled immediately, so **start early!**
+
+
+## Getting Started {-}
+
+We will use the **tidyverse** and **ipumsr** packages.
+
+```{r, message = FALSE}
+library(tidyverse)
+library(ipumsr)
+```
+
+
+Start at the [IPUMS home page](https://ipums.org/) and select the survey you wish to explore via the 'visit site' option.
+
+
+```{r, echo = FALSE}
+knitr::include_graphics("IPUMS/images/step_1visit_site.png")
+```
+
+
+From here you will see a prompt to login or register at the very top of the widow:
+
+```{r, echo = FALSE}
+knitr::include_graphics("IPUMS/images/login_pt1_02.png")
+```
+
+If you have used IPUMS before, then you may proceed to login and move on to select your data. However, if you are a new user, you will need to apply for access. The register tab will ask you for standard account creation information. (You should use your Harvard college email and indicate your usage accordingly.) There are a handful of data use agreements you will be required to agree to in this process which you should note specifically with regard to citations. Once you have applied, you will need to await the confirmation of your account to log in fully.
+
+Once you have received the email confirmation and logged in properly, you will be able to begin the data selection process. The first option you will need to consider and specify will be the samples (see 'select samples' button), or time the period covered by your data. You will want to pay close attention to the intervals in this step as well as to note whether your pull will be a large sample or the entire available set (relevant in census applications). From there you can use the drop down menus and/or the search feature to locate and include the variables that you need or that may be relevant to your query.
+
+You can see below that the household and person tabs (highlighted) will provide a drop down of common variables from this repository under the respective classifications. To add a variable to your 'cart' you simply select the `+` icon, if not available either there is a corresponding explanation or it simply isn't available.
+
+```{r, echo = FALSE}
+knitr::include_graphics("IPUMS/images/var_selection_01.png")
+```
+
+Once you are satisfied with the variables and intervals you have selected in your sample, you can review and revise your selections in the cart menu prior to requesting the 'pull'. Shown below is what the cart review window shows. An `X` indicates the existence of data in the given time period. Note that there is one variable with no data, indicated by the `...` across the time period review columns.
+
+```{r, echo = FALSE}
+knitr::include_graphics("IPUMS/images/cart_02.png")
+```
+
+When you are satisfied with the sample specifications, you can proceed to the `create data extract` page. This will provide you with a handful of final options and a text window to describe the sample you've created. You should treat this like a commit message in GitHub - brief and meaningful.
+
+Submitting your request should automatically bring you to the request history page associated with your account. You will note that your requests are not permanently available here, and you should make sure to promptly download your information upon receipt.
+
+```{r, echo = FALSE}
+knitr::include_graphics("IPUMS/images/request_history_01.jpg")
+```
+
+Upon receiving the confirmation email for your request, return to the above window. You will need to first download the data via `Download.DAT`, then you will need to save the `DDI` link (via 'save as') in the **same location** as your `.dat.gz` file. Then select the `R` command file. The last step here will be to unpack / un-zip the `.dat.gz` file such that the `.gz` suffix is removed. The IPUMS [download instructions](https://usa.ipums.org/usa/extract_instructions.shtml) recommend [7-zip](http://www.7-zip.org/download.html) for those who don't already have file decompression software on hand.
+
+The `R` command file link will show you a text file containing roughly the following steps to unpack your data extraction:
+
+
+```{r, eval = FALSE}
+
+if (!require("ipumsr")) stop("Reading IPUMS data into R requires the ipumsr package. It can be installed using the following command: install.packages('ipumsr')")
+
+# this read_ipums_ddi and read_ipums_micro seem to require BOTH the .xml and
+# .dat files to run... strange behavior, but it seems to be implicit in the latter IPUMSR::* function
+# this is an ongoing point of research
+
+ddi <- read_ipums_ddi("path_to_your_file.xml")
+data <- read_ipums_micro(ddi)
+
+```
+
+
+
+```{r, echo = FALSE, cache = TRUE, message = FALSE, cache.lazy = FALSE}
+
+if (!require("ipumsr")) stop("Reading IPUMS data into R requires the ipumsr package. It can be installed using the following command: install.packages('ipumsr')")
+
+
+ddi <- read_ipums_ddi("IPUMS/extracts/census/usa_00004.xml")
+census_tbl <- read_ipums_micro(ddi)
+
+```
+
+A successful unpacking and proper saving of the `DDI` file should result in the ability to execute the code from the R command file as shown above. At this point you can access your 'Big Data' as you would any standard object. Below is an example extract from the U.S. census that has been imported in the background. Another useful feature of the `DDI` is that opening the link in your browser shows you more information about the variable abbreviations and the extract more broadly.
+
+```{r} 
+glimpse(census_tbl)
+```
+
+## Additional Notes  {-}
+
+* This data has `r scales::comma(nrow(census_tbl))` rows (big data!), so you may need to take steps not to crash your machine such as sampling the data initially or by working on the FAS cloud system.
+
+* You may also encounter problems pushing these large files to GitHub. See the large file storage options at [Git LFS](https://git-lfs.github.com/).
+
+* Some of the variables are 'haven labeled' see the [haven CRAN files](https://cran.r-project.org/web/packages/haven/haven.pdf) for more information on these.
+
+## Haven Labelled Variables  {-}
+
+If we look closely at the glimpse of our census data above you will notice that there are few columns with the `r class(census_tbl$SAMPLE)[1]` classification. This feature tends to be more useful for different software applications such as Stata, but while working in R we need to recast these variables into something more useful and convenient. The first few haven variables we see are `SAMPLE`, `OCC`(occupation), and `IND`(industry). Each of these have thousands of unique positions to recode, so ideally we want to be able to automate this.
+
+To create a labeled variable, see `haven::labelled()`, to manually recode an existing case, we would employ `dplyr::recode()`. You will find that the labels given to the `OCC` and `IND` variables aren't particularly useful - in this case it only tells you what set of occupation/industry terms survey takers were given to choose from rather than the actual term. IPUMS thankfully provides us with a key file to make these integers into something more useful. Using occupation as the example case, IPUMS does provide you with access to the precise occupation in string format - though it takes a bit more work. [HERE](https://usa.ipums.org/usa/volii/occ_ind.shtml) you can find the conversion 'crosswalk' files that IPUMS provides via their website, and [HERE](https://www.census.gov/topics/employment/industry-occupation/guidance/code-lists.html) (also linked in the IPUMS crosswalk page) are some more recent crosswalk files provided by the Census Bureau itself. These files are often formatted inconveniently, and can be different year-to-year, so be intentional when you are converting them to your preferred format.
+
+With that said, there are cases where you may want to keep the integer levels of a variable irrespective of the labels attached. In this case, the workaround is much easier! Simply call `as_factor()` on your labeled variable and you're able to further manipulate the data as you would normally.
+
+
+
+```{r, include = TRUE, eval = FALSE, echo = TRUE}
+
+class(census_tbl$OCC)[1]
+
+# returns: "haven_labelled"
+
+ex2 <- census_tbl %>%
+  select(OCC) %>%
+  mutate(occ = as_factor(OCC))
+
+class(ex2$occ)
+
+# returns: "factor"
+
+```
+
+
+There is much more to the IPUMS offerings than just U.S. population statistics. Below you can see what an extract from the M.E.P.S. (Medical Expenditure Panel Survey) or International repositories could look like. Always bear in mind that with an individual access account, you can create almost any configuration you need. While the names and certainly the available interpretations are different, the process by which we import this new tibble and transform any weird variables into our preferred format is largely the same.
+
+
+```{r, cache = TRUE, message = FALSE, cache.lazy = FALSE}
+ddi_meps <- read_ipums_ddi("IPUMS/extracts/meps/meps_00003.xml")
+meps_tbl <- read_ipums_micro(ddi_meps)
+```
+
+
+```{r}
+glimpse(meps_tbl)
+```
+
+International data is also available.
+
+
+```{r, cache = TRUE, message = FALSE, cache.lazy = FALSE}
+ddi_intntl <- read_ipums_ddi("IPUMS/extracts/international/ipumsi_00001.xml")
+int_tbl <- read_ipums_micro(ddi_intntl)
+```
+
+```{r}
+glimpse(int_tbl)
+```
+
+## What can you do with all of this?  {-}
+
+That is entirely up to you! Maybe you have an idea about the health care system and how policy change affects people in different areas. Maybe you want to know how different demographic segments of the country have changed and fared over time. Maybe you want to know how educational achievement has changed over the last 15 years. All of this can be answered, or at least approximated by data that you can access for free. 
+
+Here are some examples: 
+
+<!-- DK: Need to show the code for this! Given that we are processing the data anyway. -->
+
+```{r, echo = FALSE}
+knitr::include_graphics("IPUMS/images/censusplot.png")
+```
+
+```{r, echo = FALSE}
+knitr::include_graphics("IPUMS/images/meps_plot.png")
+```
+
+

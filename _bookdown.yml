@@ -6,7 +6,7 @@
 # 4. Uncomment desired rmd_files line, but add in a tab.
 # 5. Restart R.
 # 6. library(bookdown); clean_book(TRUE)
-# 7. Press "Build Website" in Build pane.
+# 7. Press "Build Book" in Build pane.
 # 8. Revert _bookdown.yml after chunks start processing.
 # 9. Commit and push changes in docs/ directory.
 
@@ -17,7 +17,7 @@ rmd_files:
     "00-shopping-week.Rmd",
     "01-visualization.Rmd",
     "02-wrangling.Rmd",
-    "03-functions.Rmd",
+    "03-data.Rmd",
     "04-rubin-causal-model.Rmd",
     "05-probability.Rmd",
     "06-one-parameter.Rmd",
@@ -26,11 +26,12 @@ rmd_files:
     "09-four-parameters.Rmd",
     "10-five-parameters.Rmd",
     "11-n-parameters.Rmd",
-    "12-case-studies.Rmd",
 
     "tools.Rmd",
+    "functions.Rmd",
     "shiny.Rmd",
     "maps.Rmd",
+    "ipums.Rmd",
     "animation.Rmd",
     "references.Rmd", # Must have comma after last entry
   ]
